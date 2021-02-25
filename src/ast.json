@@ -1,0 +1,41 @@
+{
+    "nodes": {
+        "Leaf": {
+            "value": "String",
+            "@visualize": "%"
+        },
+        "Binary": {
+            "lefter": "Box<dyn Node>",
+            "operator": "Box<dyn Node>",
+            "righter": "Box<dyn Node>",
+            "@visualize": "($ $ $)"
+        },
+        "Unary": {
+            "operator": "Box<dyn Node>",
+            "target": "Box<dyn Node>",
+            "@visualize": "$[$]"
+        }
+    },
+    "visitors": {
+        "SimpleVisitor": {
+            "accepts": "",
+            "returns": "",
+            "default": ""
+        },
+        "I32Visitor": {
+            "accepts": "i32",
+            "returns": "i32",
+            "default": "16"
+        },
+        "InfoVisitor": {
+            "accepts": "",
+            "returns": "String",
+            "default": "String::new()"
+        },
+        "SpyVisitor": {
+            "accepts": "String",
+            "returns": "",
+            "default": ""
+        }
+    }
+}

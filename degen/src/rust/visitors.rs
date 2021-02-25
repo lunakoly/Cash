@@ -1,0 +1,117 @@
+use crate::rendering::*;
+use crate::rust::*;
+
+use inflector::Inflector;
+
+pub struct NodeInfo {
+    pub name: String,
+    pub fields: Vec<FieldInfo>,
+    pub visualization: String,
+}
+
+pub struct VisitorInfo {
+    pub name: String,
+    pub accepts: String,
+    pub returns: String,
+    pub default: String,
+}
+
+const ACCEPT_PROTO_TEMPLATE: &'static str = "
+    fn accept_$$(&mut self, visitor: &mut dyn $$$$)$$;
+";
+
+const ACCEPT_TEMPLATE: &'static str = "
+    fn accept_$$(&mut self, visitor: &mut dyn $$$$)$$ {
+        $$visitor.visit_$$(self$$);
+    }
+";
+
+const ACCEPTS: &'static str = ", data: $$";
+
+const ACCEPTS_WITHOUT_USAGE: &'static str = ", _data: $$";
+
+const RETURNS: &'static str = " -> $$";
+
+fn render_accept_proto(visitor: &VisitorInfo) -> String {
+    let snake = visitor.name.to_snake_case();
+    let accepts = render_non_empty(ACCEPTS, &visitor.accepts);
+    let returns = render_non_empty(RETURNS, &visitor.returns);
+    return render(ACCEPT_PROTO_TEMPLATE, 4, &[&snake, &visitor.name, &accepts, &returns]);
+}
+
+fn render_accept(
+    visitor: &VisitorInfo,
+    self_name: &str
+) -> String {
+    let visitor_snake = visitor.name.to_snake_case();
+    let self_snake = self_name.to_snake_case();
+
+    let return_keyword = if !visitor.returns.is_empty() {
+        "return "
+    } else {
+        ""
+    };
+
+    let data_parameter = if !visitor.accepts.is_empty() {
+        ", data"
+    } else {
+        ""
+    };
+
+    let accepts = render_non_empty(ACCEPTS, &visitor.accepts);
+    let returns = render_non_empty(RETURNS, &visitor.returns);
+
+    return render(ACCEPT_TEMPLATE, 4, &[
+        &visitor_snake, &visitor.name, &accepts, &returns, &return_keyword, &self_snake, &data_parameter
+    ]);
+}
+
+const VISUALIZE_PROTO_TEMPLATE: &'static str = "
+    fn visualize(&self) -> String;
+";
+
+const VISUALIZE_TEMPLATE: &'static str = "
+    fn visualize(&self) -> String {
+    $$
+    }
+";
+
+pub fn render_node(visitors: &Vec<VisitorInfo>) -> String {
+    let mut pieces = vec![render(VISUALIZE_PROTO_TEMPLATE, 4, &[])];
+
+    for it in visitors {
+        pieces.push(render_accept_proto(it));
+    }
+
+    return render_trait("Node", &pieces.join("\n\n"));
+}
+
+pub fn render_impl_node(node: &NodeInfo, visitors: &Vec<VisitorInfo>) -> String {
+    let mut pieces = vec![render(VISUALIZE_TEMPLATE, 4, &[&node.visualization])];
+
+    for it in visitors {
+        pieces.push(render_accept(it, &node.name));
+    }
+
+    return render_impl("Node", &node.name, &pieces.join("\n\n"));
+}
+
+const VISIT_TEMPLATE: &'static str = "
+    fn visit_$$(&mut self, _it: &mut $$$$)$$ {
+        $$
+    }
+";
+
+pub fn render_trait_visitor(visitor: &VisitorInfo, nodes: &Vec<NodeInfo>) -> String {
+    let mut pieces = vec!();
+
+    for it in nodes {
+        let snake = it.name.to_snake_case();
+        let accepts = render_non_empty(ACCEPTS_WITHOUT_USAGE, &visitor.accepts);
+        let returns = render_non_empty(RETURNS, &visitor.returns);
+        let visit = render(VISIT_TEMPLATE, 4, &[&snake, &it.name, &accepts, &returns, &visitor.default]);
+        pieces.push(visit);
+    }
+
+    return render_trait(&visitor.name, &pieces.join("\n\n"));
+}
