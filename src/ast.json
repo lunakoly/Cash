@@ -27,6 +27,11 @@
             "returns": "i32",
             "default": "16"
         },
+        "LeveledVisitor": {
+            "accepts": "usize",
+            "returns": "",
+            "default": ""
+        },
         "InfoVisitor": {
             "accepts": "",
             "returns": "String",

@@ -8,25 +8,32 @@ use ferris_says::say;
 use std::io::Read;
 use std::io::{stdout, BufWriter};
 
+use orders::stream::analyzable_stream::*;
+use orders::stream::accumulator_stream::*;
+use orders::stream::text_stream::*;
+use orders::stream::buffered_stream::*;
+use orders::stream::std_stream::*;
+use orders::stream::Stream;
+
 struct SampleVisitor;
 
-impl SimpleVisitor for SampleVisitor {
-    fn visit_leaf(&mut self, it: &mut Leaf) {
-        println!("Visiting: Leaf: {:?}", it.value);
+impl LeveledVisitor for SampleVisitor {
+    fn visit_leaf(&mut self, it: &mut Leaf, data: usize) {
+        println!("{}Visiting: Leaf: {:?}", " ".repeat(data), it.value);
     }
 
-    fn visit_binary(&mut self, it: &mut Binary) {
-        println!("Visiting: Binary {{");
-        it.lefter.accept_simple_visitor(self);
-        it.righter.accept_simple_visitor(self);
-        println!("Visiting: Binary }}");
+    fn visit_binary(&mut self, it: &mut Binary, data: usize) {
+        println!("{}Visiting: Binary {{", " ".repeat(data));
+        it.lefter.accept_leveled_visitor(self, data + 2);
+        it.righter.accept_leveled_visitor(self, data + 2);
+        println!("{}Visiting: Binary }}", " ".repeat(data));
     }
 
-    fn visit_unary(&mut self, it: &mut Unary) {
-        println!("Visiting: Unary {{");
-        it.operator.accept_simple_visitor(self);
-        it.target.accept_simple_visitor(self);
-        println!("Visiting: Unary }}");
+    fn visit_unary(&mut self, it: &mut Unary, data: usize) {
+        println!("{}Visiting: Unary {{", " ".repeat(data));
+        it.operator.accept_leveled_visitor(self, data + 2);
+        it.target.accept_leveled_visitor(self, data + 2);
+        println!("{}Visiting: Unary }}", " ".repeat(data));
     }
 }
 
@@ -151,6 +158,19 @@ impl Context {
 }
 
 fn main() {
+    println!("Starting: ");
+
+    let input1 = StdinStream::new();
+    let input2 = SimpleBufferedStream::new(Box::new(input1), 16, 5, Some('N'));
+    let input3 = SimpleTextStream::new(input2);
+    let mut input = SimpleAnalyzableStream::new(input3);
+
+    while input.has_next() && input.peek() != Some('n') {
+        input.step();
+    }
+
+    println!("Read: {}", input.revise_all());
+
     let mut context = Context {
         input: std::io::stdin().bytes().peekable(),
         indent_level: 0,
@@ -180,7 +200,7 @@ fn main() {
 
     let mut visitor = SampleVisitor;
 
-    ast.accept_simple_visitor(&mut visitor);
+    ast.accept_leveled_visitor(&mut visitor, 0);
 
     let stdout = stdout();
     let message = String::from("Done!");

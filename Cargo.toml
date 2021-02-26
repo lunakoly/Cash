@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 ferris-says = "0.1"
 degen = { path = "degen", version = "*"}
+orders = { path = "orders", version = "*" }
 
 [build-dependencies]
 serde_json = "1.0"
