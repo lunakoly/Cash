@@ -12,7 +12,7 @@ degen = { path = "degen", version = "*"}
 orders = { path = "orders", version = "*" }
 
 [build-dependencies]
-serde_json = "1.0"
+serde_json = { version = "1.0", features = ["preserve_order"] }
 Inflector = "*"
 degen = { path = "degen", version = "*"}
 building = { path = "building", version = "*" }

@@ -14,6 +14,25 @@
             "operator": "Box<dyn Node>",
             "target": "Box<dyn Node>",
             "@visualize": "$[$]"
+        },
+        "Call": {
+            "operator": "Box<dyn Node>",
+            "arguments": "Vec<Box<dyn Node>>",
+            "@visualize": "$(@)"
+        },
+        "File": {
+            "declarations": "Vec<Box<dyn Node>>",
+            "@visualize": "File {@}"
+        },
+        "NamedValue": {
+            "name": "String",
+            "value": "Box<dyn Node>",
+            "@visualize": "% = $"
+        },
+        "Module": {
+            "modifiers": "Vec<Box<dyn Node>>",
+            "declarations": "Vec<Box<dyn Node>>",
+            "@visualize": "Module #(@) {@}"
         }
     },
     "visitors": {

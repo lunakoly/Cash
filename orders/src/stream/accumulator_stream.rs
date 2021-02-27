@@ -23,4 +23,16 @@ pub trait AccumulatorStream : Stream<Option<char>> {
 
         return false;
     }
+
+    /// Returns true, if the `peek()`'ed character
+    /// has it's u32 representation within the values
+    /// of the given 2 characters (both including).
+    fn expect_in(&mut self, from: char, to: char) -> bool {
+        if let Some(symbol) = self.peek() {
+            // from as u32 <= symbol as u32 && symbol as u32 <= to as u32
+            (from..to).contains(&symbol)
+        } else {
+            false
+        }
+    }
 }

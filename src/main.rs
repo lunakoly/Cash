@@ -28,6 +28,49 @@ impl LeveledVisitor for SampleVisitor {
         it.target.accept_leveled_visitor(self, data + 2);
         println!("{}}}", " ".repeat(data));
     }
+
+    fn visit_call(&mut self, it: &mut Call, data: usize) {
+        println!("{}Call {{", " ".repeat(data));
+        it.operator.accept_leveled_visitor(self, data + 2);
+
+        for that in &mut it.arguments {
+            that.accept_leveled_visitor(self, data + 2);
+        }
+
+        println!("{}}}", " ".repeat(data));
+    }
+
+    fn visit_file(&mut self, it: &mut File, data: usize) {
+        println!("{}File {{", " ".repeat(data));
+
+        for that in &mut it.declarations {
+            that.accept_leveled_visitor(self, data + 2);
+        }
+
+        println!("{}}}", " ".repeat(data));
+    }
+
+    fn visit_named_value(&mut self, it: &mut NamedValue, data: usize) {
+        println!("{}NamedValue: {} {{", " ".repeat(data), it.name);
+        it.value.accept_leveled_visitor(self, data + 2);
+        println!("{}}}", " ".repeat(data));
+    }
+
+    fn visit_module(&mut self, it: &mut Module, data: usize) {
+        println!("{}Module #(", " ".repeat(data));
+
+        for that in &mut it.modifiers {
+            that.accept_leveled_visitor(self, data + 2);
+        }
+
+        println!("{}) {{", " ".repeat(data));
+
+        for that in &mut it.declarations {
+            that.accept_leveled_visitor(self, data + 2);
+        }
+
+        println!("{}}}", " ".repeat(data));
+    }
 }
 
 fn main() {
