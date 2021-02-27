@@ -44,7 +44,8 @@ pub fn render(
     }
 
     for it in arguments {
-        result = result.replacen("$$", it, 1);
+        let that = it.replace("\n", &new_shift);
+        result = result.replacen("$$", &that, 1);
     }
 
     return result;

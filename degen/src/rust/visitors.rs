@@ -83,7 +83,7 @@ pub fn render_node(visitors: &Vec<VisitorInfo>) -> String {
         pieces.push(render_accept_proto(it));
     }
 
-    return render_trait("Node", &pieces.join("\n\n"));
+    return render_trait("Node", &pieces.join("\n\n"), 0);
 }
 
 pub fn render_impl_node(node: &NodeInfo, visitors: &Vec<VisitorInfo>) -> String {
@@ -93,7 +93,7 @@ pub fn render_impl_node(node: &NodeInfo, visitors: &Vec<VisitorInfo>) -> String 
         pieces.push(render_accept(it, &node.name));
     }
 
-    return render_impl("Node", &node.name, &pieces.join("\n\n"));
+    return render_impl("Node", &node.name, &pieces.join("\n\n"), 0);
 }
 
 const VISIT_TEMPLATE: &'static str = "
@@ -109,9 +109,10 @@ pub fn render_trait_visitor(visitor: &VisitorInfo, nodes: &Vec<NodeInfo>) -> Str
         let snake = it.name.to_snake_case();
         let accepts = render_non_empty(ACCEPTS_WITHOUT_USAGE, &visitor.accepts);
         let returns = render_non_empty(RETURNS, &visitor.returns);
-        let visit = render(VISIT_TEMPLATE, 4, &[&snake, &it.name, &accepts, &returns, &visitor.default]);
+        let node_name = "nodes::".to_owned() + &it.name;
+        let visit = render(VISIT_TEMPLATE, 4, &[&snake, &node_name, &accepts, &returns, &visitor.default]);
         pieces.push(visit);
     }
 
-    return render_trait(&visitor.name, &pieces.join("\n\n"));
+    return render_trait(&visitor.name, &pieces.join("\n\n"), 0);
 }

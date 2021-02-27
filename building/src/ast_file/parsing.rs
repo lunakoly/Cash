@@ -28,19 +28,19 @@ fn parse_node_visualization(
     fields: &Vec<FieldInfo>
 ) -> String {
     let mut iterator = fields.iter();
-    let mut result = "\tlet mut result = String::new();\n\t\tresult += \"".to_owned();
+    let mut result = "\tlet mut result = String::new();\n\tresult += \"".to_owned();
 
     for symbol in pattern.chars() {
         match symbol {
             '%' => {
-                result += "\";\n\t\tresult += &self.";
+                result += "\";\n\tresult += &self.";
                 result += &iterator.next().unwrap().name;
-                result += ";\n\t\tresult += \"";
+                result += ";\n\tresult += \"";
             }
             '$' => {
-                result += "\";\n\t\tresult += &self.";
+                result += "\";\n\tresult += &self.";
                 result += &iterator.next().unwrap().name;
-                result += ".visualize();\n\t\tresult += \"";
+                result += ".visualize();\n\tresult += \"";
             }
             _ => {
                 result.push(symbol);
@@ -48,7 +48,7 @@ fn parse_node_visualization(
         }
     }
 
-    result += "\";\n\t\treturn result;";
+    result += "\";\n\treturn result;";
     return result;
 }
 
@@ -84,9 +84,28 @@ fn parse_visitors(visitors_json: &Value) -> Vec<VisitorInfo> {
     return visitors;
 }
 
+fn enhance_fields_types(ast_file: &mut ASTFile) {
+    let node_names: Vec<String> = ast_file.nodes.iter()
+        .map(|it| it.name.clone())
+        .collect();
+
+    for node in &mut ast_file.nodes {
+        for field in &mut node.fields {
+            if field.proto == "Box<dyn Node>" {
+                field.proto = "Box<dyn crate::cherry::Node>".to_owned();
+            } else if node_names.contains(&field.proto) {
+                field.proto = "crate::cherry::".to_owned() + &field.proto;
+            }
+        }
+    }
+}
+
 pub fn parse_ast(template: Value) -> ASTFile {
-    return ASTFile {
+    let mut ast_file = ASTFile {
         nodes: parse_nodes(&template["nodes"]),
         visitors: parse_visitors(&template["visitors"]),
     };
+
+    enhance_fields_types(&mut ast_file);
+    return ast_file;
 }

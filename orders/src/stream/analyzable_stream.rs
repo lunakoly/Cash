@@ -2,6 +2,7 @@ use crate::stream::*;
 use crate::stream::buffered_stream::*;
 use crate::stream::text_stream::*;
 use crate::stream::accumulator_stream::*;
+use crate::stream::stdin_stream::*;
 
 trait AnalyzableStream : TextStream + AccumulatorStream {}
 
@@ -18,6 +19,24 @@ impl SimpleAnalyzableStream {
             delegate: delegate,
             accumulator: String::new()
         };
+    }
+
+    pub fn acquire(
+        buffer_size: usize,
+        buffer_indent: usize
+    ) -> SimpleAnalyzableStream {
+        SimpleAnalyzableStream::new(
+            SimpleTextStream::new(
+                SimpleBufferedStream::new(
+                    Box::new(
+                        StdinStream::new()
+                    ),
+                    buffer_size,
+                    buffer_indent,
+                    Some('\n')
+                )
+            )
+        )
     }
 }
 
@@ -58,6 +77,10 @@ impl TextStream for SimpleAnalyzableStream {
 
     fn match_text(&self, next: &str) -> usize {
         return self.delegate.match_text(next);
+    }
+
+    fn grab_string(&mut self) -> String {
+        return self.delegate.grab_string();
     }
 }
 

@@ -2,7 +2,7 @@ pub mod buffered_stream;
 pub mod text_stream;
 pub mod accumulator_stream;
 pub mod analyzable_stream;
-pub mod std_stream;
+pub mod stdin_stream;
 
 /// A sequence of some values of
 /// type T.

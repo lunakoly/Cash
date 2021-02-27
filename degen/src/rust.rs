@@ -14,8 +14,8 @@ const FIELD_TEMPLATE: &'static str = "
 
 /// Returns the string representation
 /// of a struct field.
-pub fn render_field(field: &FieldInfo) -> String {
-    return render(FIELD_TEMPLATE, 4, &[&field.name, &field.proto]);
+pub fn render_field(field: &FieldInfo, indent: usize) -> String {
+    return render(FIELD_TEMPLATE, indent, &[&field.name, &field.proto]);
 }
 
 const STRUCT_TEMPLATE: &'static str = "
@@ -25,14 +25,14 @@ const STRUCT_TEMPLATE: &'static str = "
 ";
 
 /// Returns the struct representation.
-pub fn render_struct(name: &str, fields: &Vec<FieldInfo>) -> String {
+pub fn render_struct(name: &str, fields: &Vec<FieldInfo>, indent: usize) -> String {
     let mut pieces = vec!();
 
     for it in fields {
-        pieces.push(render_field(it));
+        pieces.push(render_field(it, 4));
     }
 
-    return render(STRUCT_TEMPLATE, 0, &[name, &pieces.join("\n")]);
+    return render(STRUCT_TEMPLATE, indent, &[name, &pieces.join("\n")]);
 }
 
 const TRAIT_TEMPLATE: &'static str = "
@@ -42,8 +42,8 @@ const TRAIT_TEMPLATE: &'static str = "
 ";
 
 /// Returns the trait representation.
-pub fn render_trait(name: &str, methods: &str) -> String {
-    return render(TRAIT_TEMPLATE, 0, &[name, methods]);
+pub fn render_trait(name: &str, methods: &str, indent: usize) -> String {
+    return render(TRAIT_TEMPLATE, indent, &[name, methods]);
 }
 
 const IMPL_TEMPLATE: &'static str = "
@@ -53,6 +53,17 @@ const IMPL_TEMPLATE: &'static str = "
 ";
 
 /// Returns the impl representation.
-pub fn render_impl(trait_name: &str, struct_name: &str, methods: &str) -> String {
-    return render(IMPL_TEMPLATE, 0, &[trait_name, struct_name, methods]);
+pub fn render_impl(trait_name: &str, struct_name: &str, methods: &str, indent: usize) -> String {
+    return render(IMPL_TEMPLATE, indent, &[trait_name, struct_name, methods]);
+}
+
+const MOD_TEMPLATE: &'static str = "
+    pub mod $$ {
+    $$
+    }
+";
+
+/// Returns the impl representation.
+pub fn render_mod(mod_name: &str, contents: &str, indent: usize) -> String {
+    return render(MOD_TEMPLATE, indent, &[mod_name, contents]);
 }
