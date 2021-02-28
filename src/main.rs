@@ -63,6 +63,12 @@ impl LeveledVisitor for SampleVisitor {
             that.accept_leveled_visitor(self, data + 2);
         }
 
+        println!("{}) {}(", " ".repeat(data), it.name);
+
+        for that in &mut it.inputs {
+            that.accept_leveled_visitor(self, data + 2);
+        }
+
         println!("{}) {{", " ".repeat(data));
 
         for that in &mut it.declarations {
@@ -70,6 +76,30 @@ impl LeveledVisitor for SampleVisitor {
         }
 
         println!("{}}}", " ".repeat(data));
+    }
+
+    fn visit_variable(&mut self, it: &mut Variable, data: usize) {
+        println!("{}Variable #(", " ".repeat(data));
+
+        for that in &mut it.modifiers {
+            that.accept_leveled_visitor(self, data + 2);
+        }
+
+        print!("{}) {}", " ".repeat(data), it.name);
+
+        if let Some(that) = &mut it.proto {
+            println!(" [");
+            that.accept_leveled_visitor(self, data + 2);
+            print!("{}]", " ".repeat(data));
+        }
+
+        if let Some(that) = &mut it.value {
+            println!(" {{");
+            that.accept_leveled_visitor(self, data + 2);
+            print!("{}}}", " ".repeat(data));
+        }
+
+        println!("");
     }
 }
 

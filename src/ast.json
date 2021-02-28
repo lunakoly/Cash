@@ -31,8 +31,17 @@
         },
         "Module": {
             "modifiers": "Vec<Box<dyn Node>>",
+            "name": "String",
+            "inputs": "Vec<Box<dyn Node>>",
             "declarations": "Vec<Box<dyn Node>>",
-            "@visualize": "Module #(@) {@}"
+            "@visualize": "module #(@) %(@) {@}"
+        },
+        "Variable": {
+            "modifiers": "Vec<Box<dyn Node>>",
+            "name": "String",
+            "proto": "Option<Box<dyn Node>>",
+            "value": "Option<Box<dyn Node>>",
+            "@visualize": "#(@) %: ? = ?"
         }
     },
     "visitors": {

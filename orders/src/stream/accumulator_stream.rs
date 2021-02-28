@@ -30,7 +30,7 @@ pub trait AccumulatorStream : Stream<Option<char>> {
     fn expect_in(&mut self, from: char, to: char) -> bool {
         if let Some(symbol) = self.peek() {
             // from as u32 <= symbol as u32 && symbol as u32 <= to as u32
-            (from..to).contains(&symbol)
+            (from..=to).contains(&symbol)
         } else {
             false
         }

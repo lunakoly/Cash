@@ -8,10 +8,10 @@
 module TopLevel(
     @altera_attribute = "..."
     @chip_pin = "..."
-    clock,
+    clock: logic,
     @altera_attribute = "..."
     @chip_pin = "..."
-    enable,
+    enable = 1,
     @altera_attribute = "..."
     @chip_pin = "..."
     direction,
@@ -20,45 +20,45 @@ module TopLevel(
     async_reset,
 ) {
     let enable_sync = InputSynchronization(
-        target = enable,
+        .target = enable,
     )
 
     let reset_sync = InputSynchronization(
-        target = reset,
+        .target = reset,
     )
 
     let direction_sync = InputSynchronization(
-        target = direction,
+        .target = direction,
     )
 
     #D
     let divider = Divider(
-        clock = clock,
-        async_clear = reset_sync.out,
-        enable = cout & enable_sync.out,
+        .clock = clock,
+        .async_clear = reset_sync.out,
+        .enable = cout & enable_sync.out,
     )
 
     let counter = Counter(
-        clock = clock,
-        async_clear = reset_sync.out,
-        enable = divider.cout & enable_sync.out,
-        direction = direction_sync.out,
+        .clock = clock,
+        .async_clear = reset_sync.out,
+        .enable = divider.cout & enable_sync.out,
+        .direction = direction_sync.out,
     )
 
     let coder = Coder(
-        clock = clock,
-        address = counter.count_value,
-        q = {hex_internal[1], hex_internal[0]}
+        .clock = clock,
+        .address = counter.count_value,
+        .q = {hex_internal[1], hex_internal[0]}
     )
 
     let hex_internal = {coder.q[13:7], coder.q[6:0]}
 
-    #14
+    #.WIDTH = 14
     let result = OutputSynchronization(
-        clock = clock,
-        async_clear = reset_sync,
-        enable = enable_sync,
-        in = {hex_internal[1], hex_internal[0]}
+        .clock = clock,
+        .async_clear = reset_sync,
+        .enable = enable_sync,
+        .in = {hex_internal[1], hex_internal[0]}
     )
 
     output hex = result.out

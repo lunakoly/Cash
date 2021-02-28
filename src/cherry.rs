@@ -97,6 +97,30 @@ impl Context {
             self.input.step();
         }
 
+        let mut name = self.input.revise_all();
+
+        if self.expect_operator(".") {
+            name += ".";
+            name += &self.parse_identifier().value;
+        }
+
+        return Box::new(Leaf {
+            value: name
+        });
+    }
+
+    fn parse_string(&mut self) -> Box<Leaf> {
+        self.skip_blank();
+        self.input.clear();
+
+        self.input.accept('"');
+
+        while
+            self.input.has_next() &&
+            !self.input.accept('"') {
+            self.input.step();
+        }
+
         return Box::new(Leaf {
             value: self.input.revise_all()
         });
@@ -107,20 +131,36 @@ impl Context {
             self.parse_plus_minus()
         };
 
-        let it = self.parse_identifier();
+        let it = if self.input.peek() == Some('"') {
+            self.parse_string()
+        } else {
+            self.parse_identifier()
+        };
 
         within_parentheses! { self =>
             Box::new(Call {
                 operator: it,
-                arguments: self.parse_expression_list(),
+                arguments: self.parse_dot_identifier_equals_expression_list(),
             })
         };
 
         return it;
     }
 
-    fn parse_term(&mut self) -> Box<dyn Node> {
+    fn parse_bitwise_and(&mut self) -> Box<dyn Node> {
         parse_binary! { self, parse_terminal =>
+            self.expect_operator("&")
+        };
+    }
+
+    fn parse_bitwise_or(&mut self) -> Box<dyn Node> {
+        parse_binary! { self, parse_bitwise_and =>
+            self.expect_operator("|")
+        };
+    }
+
+    fn parse_term(&mut self) -> Box<dyn Node> {
+        parse_binary! { self, parse_bitwise_or =>
             self.expect_operator("*") ||
             self.expect_operator("/")
         };
@@ -135,10 +175,6 @@ impl Context {
 
     fn parse_expression(&mut self) -> Box<dyn Node> {
         return self.parse_plus_minus();
-    }
-
-    fn parse_expression_list(&mut self) -> Vec<Box<dyn Node>> {
-        parse_list! { self, parse_expression }
     }
 
     fn parse_identifier_equals_expression(&mut self) -> Box<NamedValue> {
@@ -156,9 +192,80 @@ impl Context {
         });
     }
 
-    fn parse_modifier(&mut self) -> Box<dyn Node> {
+    fn parse_dot_identifier_equals_expression(&mut self) -> Box<dyn Node> {
+        if self.expect_operator(".") {
+            return self.parse_identifier_equals_expression();
+        }
+
+        return self.parse_expression();
+    }
+
+    fn parse_dot_identifier_equals_expression_list(&mut self) -> Vec<Box<dyn Node>> {
+        parse_list! { self, parse_dot_identifier_equals_expression, ")" }
+    }
+
+    fn parse_module_modifier(&mut self) -> Box<dyn Node> {
         if self.expect_keyword("parameter") {
             return self.parse_identifier_equals_expression();
+        }
+
+        return self.parse_error();
+    }
+
+    fn parse_port_attribute(&mut self) -> Box<dyn Node> {
+        return self.parse_identifier_equals_expression();
+    }
+
+    fn parse_variable(&mut self, modifiers: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+        let mut it = Variable {
+            modifiers: modifiers,
+            name: self.parse_identifier().value.clone(),
+            proto: None,
+            value: None
+        };
+
+        if self.expect_operator(":") {
+            it.proto = Some(self.parse_expression());
+        }
+
+        if self.expect_operator("=") {
+            it.value = Some(self.parse_expression());
+        }
+
+        return Box::new(it);
+    }
+
+    fn parse_module_input(&mut self) -> Box<dyn Node> {
+        let mut modifiers = vec![];
+
+        while self.expect_operator("@") {
+            modifiers.push(self.parse_port_attribute());
+        }
+
+        return self.parse_variable(modifiers);
+    }
+
+    fn parse_module_inputs(&mut self) -> Vec<Box<dyn Node>> {
+        parse_list! { self, parse_module_input, ")" }
+    }
+
+    fn parse_module_level_modifier(&mut self) -> Box<dyn Node> {
+        return self.parse_dot_identifier_equals_expression();
+    }
+
+    fn parse_module_level(&mut self) -> Box<dyn Node> {
+        let mut modifiers = vec![];
+
+        while self.expect_operator("#") {
+            modifiers.push(self.parse_module_level_modifier());
+        }
+
+        if self.expect_keyword("let") {
+            return self.parse_variable(modifiers);
+        }
+
+        if self.expect_keyword("always") {
+            return self.parse_error();
         }
 
         return self.parse_error();
@@ -167,12 +274,21 @@ impl Context {
     fn parse_module(&mut self, modifiers: Vec<Box<dyn Node>>) -> Box<Module> {
         let mut it = Module {
             declarations: vec![],
+            name: self.parse_identifier().value.clone(),
+            inputs: vec![],
             modifiers: modifiers
         };
 
-        while self.input.has_next() {
-            // it.declarations.push(self.parse_expression());
-            it.declarations.push(self.parse_error());
+        if self.expect_operator("(") {
+            it.inputs = self.parse_module_inputs();
+            self.expect_operator(")");
+        }
+
+        if self.expect_operator("{") {
+            while self.input.has_next() {
+                it.declarations.push(self.parse_module_level());
+            }
+            self.expect_operator("}");
         }
 
         return Box::new(it);
@@ -182,7 +298,7 @@ impl Context {
         let mut modifiers = vec![];
 
         while self.expect_operator("#") {
-            modifiers.push(self.parse_modifier());
+            modifiers.push(self.parse_module_modifier());
         }
 
         if self.expect_keyword("module") {

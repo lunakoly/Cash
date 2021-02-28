@@ -47,6 +47,11 @@ fn parse_node_visualization(
                 result += &iterator.next().unwrap().name;
                 result += ".iter().map(|it| it.visualize()).collect::<Vec<String>>().join(\", \");\n\tresult += \"";
             }
+            '?' => {
+                result += "\";\n\tif let Some(that) = &self.";
+                result += &iterator.next().unwrap().name;
+                result += " {\n\t\tresult += &that.visualize();\n\t} else {\n\t\tresult += \"<!IMPLICIT!>\";\n\t}\n\tresult += \"";
+            }
             _ => {
                 result.push(symbol);
             }
@@ -100,6 +105,8 @@ fn enhance_fields_types(ast_file: &mut ASTFile) {
                 field.proto = "Box<dyn crate::cherry::Node>".to_owned();
             } else if field.proto == "Vec<Box<dyn Node>>" {
                 field.proto = "Vec<Box<dyn crate::cherry::Node>>".to_owned();
+            } else if field.proto == "Option<Box<dyn Node>>" {
+                field.proto = "Option<Box<dyn crate::cherry::Node>>".to_owned();
             } else if node_names.contains(&field.proto) {
                 field.proto = "crate::cherry::".to_owned() + &field.proto;
             }

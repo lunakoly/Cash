@@ -41,10 +41,16 @@ macro_rules! parse_binary {
 
 #[macro_export]
 macro_rules! parse_list {
-    ( $this:expr, $inner:ident) => {
+    ( $this:expr, $inner:ident, $closing:expr) => {
         let mut it = vec![$this.$inner()];
 
         while $this.expect_operator(",") {
+            $this.skip_blank();
+
+            if $this.input.match_text($closing) == $closing.len() {
+                break;
+            }
+
             it.push($this.$inner());
         }
 
