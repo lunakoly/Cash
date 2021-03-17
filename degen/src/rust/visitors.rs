@@ -26,11 +26,11 @@ const ACCEPT_TEMPLATE: &'static str = "
     }
 ";
 
-const ACCEPTS: &'static str = ", data: $$";
+pub const ACCEPTS: &'static str = ", data: $$";
 
 const ACCEPTS_WITHOUT_USAGE: &'static str = ", _data: $$";
 
-const RETURNS: &'static str = " -> $$";
+pub const RETURNS: &'static str = " -> $$";
 
 fn render_accept_proto(visitor: &VisitorInfo) -> String {
     let snake = visitor.name.to_snake_case();
@@ -98,7 +98,7 @@ pub fn render_impl_node(node: &NodeInfo, visitors: &Vec<VisitorInfo>) -> String 
 
 const VISIT_TEMPLATE: &'static str = "
     fn visit_$$(&mut self, _it: &mut $$$$)$$ {
-        $$
+    $$
     }
 ";
 
@@ -110,7 +110,8 @@ pub fn render_trait_visitor(visitor: &VisitorInfo, nodes: &Vec<NodeInfo>) -> Str
         let accepts = render_non_empty(ACCEPTS_WITHOUT_USAGE, &visitor.accepts);
         let returns = render_non_empty(RETURNS, &visitor.returns);
         let node_name = "nodes::".to_owned() + &it.name;
-        let visit = render(VISIT_TEMPLATE, 4, &[&snake, &node_name, &accepts, &returns, &visitor.default]);
+        let default = "    ".to_owned() + &visitor.default;
+        let visit = render(VISIT_TEMPLATE, 4, &[&snake, &node_name, &accepts, &returns, &default]);
         pieces.push(visit);
     }
 

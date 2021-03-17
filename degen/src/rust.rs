@@ -25,7 +25,7 @@ const STRUCT_TEMPLATE: &'static str = "
 ";
 
 /// Returns the struct representation.
-pub fn render_struct(name: &str, fields: &Vec<FieldInfo>, indent: usize) -> String {
+pub fn render_struct(name: &str, fields: &[FieldInfo], indent: usize) -> String {
     let mut pieces = vec!();
 
     for it in fields {
@@ -33,6 +33,15 @@ pub fn render_struct(name: &str, fields: &Vec<FieldInfo>, indent: usize) -> Stri
     }
 
     return render(STRUCT_TEMPLATE, indent, &[name, &pieces.join("\n")]);
+}
+
+const STRUCT_DECLARATION_ONLY_TEMPLATE: &'static str = "
+    pub struct $$;
+";
+
+/// Returns the struct representation without the body.
+pub fn render_struct_declaration_only(name: &str, indent: usize) -> String {
+    return render(STRUCT_DECLARATION_ONLY_TEMPLATE, indent, &[name]);
 }
 
 const TRAIT_TEMPLATE: &'static str = "
