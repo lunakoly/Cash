@@ -6,7 +6,6 @@ use inflector::Inflector;
 pub struct NodeInfo {
     pub name: String,
     pub fields: Vec<FieldInfo>,
-    pub visualization: String,
 }
 
 pub struct VisitorInfo {
@@ -66,18 +65,8 @@ fn render_accept(
     ]);
 }
 
-const VISUALIZE_PROTO_TEMPLATE: &'static str = "
-    fn visualize(&self) -> String;
-";
-
-const VISUALIZE_TEMPLATE: &'static str = "
-    fn visualize(&self) -> String {
-    $$
-    }
-";
-
 pub fn render_node(visitors: &Vec<VisitorInfo>) -> String {
-    let mut pieces = vec![render(VISUALIZE_PROTO_TEMPLATE, 4, &[])];
+    let mut pieces = vec![];
 
     for it in visitors {
         pieces.push(render_accept_proto(it));
@@ -87,7 +76,7 @@ pub fn render_node(visitors: &Vec<VisitorInfo>) -> String {
 }
 
 pub fn render_impl_node(node: &NodeInfo, visitors: &Vec<VisitorInfo>) -> String {
-    let mut pieces = vec![render(VISUALIZE_TEMPLATE, 4, &[&node.visualization])];
+    let mut pieces = vec![];
 
     for it in visitors {
         pieces.push(render_accept(it, &node.name));

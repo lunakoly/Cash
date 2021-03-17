@@ -12,9 +12,6 @@ fn main() {
     println!("Starting: ");
 
     let mut ast = cherry::parse();
-
-    println!("AST: {:?}", ast.visualize());
-
     ast.accept_leveled_visitor(&mut ASTPrinter, 0);
 
     let stdout = stdout();

@@ -47,14 +47,14 @@ fn render_print_simple_field(field: &str, indent: usize) -> String {
 }
 
 const PRINT_LIST_FIELD: &'static str = "
-    for that in &mut it.$$ {
-        print!(\"{}$$ = \", \" \".repeat(data + 2));
-        that.accept_leveled_visitor(self, data + 2);
+    for that in 0..it.$$.len() {
+        print!(\"{}$$.{} = \", \" \".repeat(data + 2), that);
+        it.$$[that].accept_leveled_visitor(self, data + 2);
     }
 ";
 
 fn render_print_list_field(field: &str, indent: usize) -> String {
-    return render(PRINT_LIST_FIELD, indent, &[field, field])
+    return render(PRINT_LIST_FIELD, indent, &[field, field, field])
 }
 
 const PRINT_DEBUG_FIELD: &'static str = "

@@ -23,56 +23,15 @@ fn parse_node_fields(node_body_json: &Value) -> Vec<FieldInfo> {
     return fields;
 }
 
-fn parse_node_visualization(
-    pattern: &str,
-    fields: &Vec<FieldInfo>
-) -> String {
-    let mut iterator = fields.iter();
-    let mut result = "\tlet mut result = String::new();\n\tresult += \"".to_owned();
-
-    for symbol in pattern.chars() {
-        match symbol {
-            '%' => {
-                result += "\";\n\tresult += &self.";
-                result += &iterator.next().unwrap().name;
-                result += ";\n\tresult += \"";
-            }
-            '$' => {
-                result += "\";\n\tresult += &self.";
-                result += &iterator.next().unwrap().name;
-                result += ".visualize();\n\tresult += \"";
-            }
-            '@' => {
-                result += "\";\n\tresult += &self.";
-                result += &iterator.next().unwrap().name;
-                result += ".iter().map(|it| it.visualize()).collect::<Vec<String>>().join(\", \");\n\tresult += \"";
-            }
-            '?' => {
-                result += "\";\n\tif let Some(that) = &self.";
-                result += &iterator.next().unwrap().name;
-                result += " {\n\t\tresult += &that.visualize();\n\t} else {\n\t\tresult += \"<!IMPLICIT!>\";\n\t}\n\tresult += \"";
-            }
-            _ => {
-                result.push(symbol);
-            }
-        }
-    }
-
-    result += "\";\n\treturn result;";
-    return result;
-}
-
 fn parse_nodes(nodes_json: &Value) -> Vec<NodeInfo> {
     let mut nodes = vec!();
 
     for (node, node_body) in nodes_json.as_object().unwrap() {
         let fields = parse_node_fields(node_body);
-        let visualization = parse_node_visualization(node_body["@visualize"].as_str().unwrap(), &fields);
 
         nodes.push(NodeInfo {
             name: node.clone(),
             fields: fields,
-            visualization: visualization.clone()
         });
     }
 
