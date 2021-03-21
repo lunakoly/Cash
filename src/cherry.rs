@@ -1,18 +1,14 @@
 include!(concat!(env!("OUT_DIR"), "/ast.rs"));
 
 use orders::stream::analyzable_stream::*;
-use orders::stream::accumulator_stream::*;
-use orders::stream::buffered_stream::*;
-use orders::stream::text_stream::*;
-use orders::stream::Stream;
 
 use orders::{within, within_parentheses, parse_binary, parse_list};
 
 use nodes::*;
 
 #[allow(dead_code)]
-struct Context {
-    input: SimpleAnalyzableStream,
+struct Context<'a> {
+    input: &'a mut (dyn AnalyzableStream + 'a),
     indent_level: u32,
     line_number: u32,
 }
@@ -24,7 +20,7 @@ fn is_non_operator(symbol: char) -> bool {
         symbol == '_';
 }
 
-impl Context {
+impl <'a> Context<'a> {
     fn skip_blank(&mut self) {
         while let Some(symbol) = self.input.peek() {
             if
@@ -321,9 +317,9 @@ impl Context {
     }
 }
 
-pub fn parse() -> Box<dyn Node> {
+pub fn parse(input: &mut dyn AnalyzableStream) -> Box<dyn Node> {
     let mut context = Context {
-        input: SimpleAnalyzableStream::acquire(16, 5),
+        input: input,
         indent_level: 0,
         line_number: 1,
     };

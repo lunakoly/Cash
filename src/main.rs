@@ -8,10 +8,17 @@ use ferris_says::say;
 
 use std::io::{stdout, BufWriter};
 
+use orders::stream::stdin_stream::{StdinStream};
+use orders::stream::analyzable_stream::{SimpleAnalyzableStream};
+
 fn main() {
     println!("Starting: ");
 
-    let mut ast = cherry::parse();
+    let mut raw_user_input = StdinStream::new();
+    let mut analyzable_stream = SimpleAnalyzableStream::acquire(16, 5, &mut raw_user_input);
+
+    let mut ast = cherry::parse(&mut analyzable_stream);
+
     ast.accept_leveled_visitor(&mut ASTPrinter, 0);
 
     let stdout = stdout();

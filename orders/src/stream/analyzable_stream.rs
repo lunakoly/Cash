@@ -2,20 +2,19 @@ use crate::stream::*;
 use crate::stream::buffered_stream::*;
 use crate::stream::text_stream::*;
 use crate::stream::accumulator_stream::*;
-use crate::stream::stdin_stream::*;
 
-trait AnalyzableStream : TextStream + AccumulatorStream {}
+pub trait AnalyzableStream : TextStream + AccumulatorStream {}
 
-pub struct SimpleAnalyzableStream {
-    pub delegate: SimpleTextStream,
+pub struct SimpleAnalyzableStream<'a> {
+    pub delegate: SimpleTextStream<'a>,
     pub accumulator: String,
 }
 
-impl SimpleAnalyzableStream {
+impl <'a> SimpleAnalyzableStream<'a> {
     pub fn new(
-        delegate: SimpleTextStream
-    ) -> SimpleAnalyzableStream {
-        return SimpleAnalyzableStream {
+        delegate: SimpleTextStream<'a>
+    ) -> SimpleAnalyzableStream<'a> {
+        return SimpleAnalyzableStream::<'a> {
             delegate: delegate,
             accumulator: String::new()
         };
@@ -23,14 +22,13 @@ impl SimpleAnalyzableStream {
 
     pub fn acquire(
         buffer_size: usize,
-        buffer_indent: usize
-    ) -> SimpleAnalyzableStream {
+        buffer_indent: usize,
+        backend: &'a mut (dyn Stream<Option<char>> + 'a),
+    ) -> SimpleAnalyzableStream<'a> {
         SimpleAnalyzableStream::new(
             SimpleTextStream::new(
                 SimpleBufferedStream::new(
-                    Box::new(
-                        StdinStream::new()
-                    ),
+                    backend,
                     buffer_size,
                     buffer_indent,
                     Some('\n')
@@ -40,7 +38,7 @@ impl SimpleAnalyzableStream {
     }
 }
 
-impl Stream<Option<char>> for SimpleAnalyzableStream {
+impl <'a> Stream<Option<char>> for SimpleAnalyzableStream<'a> {
     fn get_end_value(&self) -> Option<char> {
         return self.delegate.get_end_value();
     }
@@ -60,7 +58,7 @@ impl Stream<Option<char>> for SimpleAnalyzableStream {
     }
 }
 
-impl BufferedStream<Option<char>> for SimpleAnalyzableStream {
+impl <'a> BufferedStream<Option<char>> for SimpleAnalyzableStream<'a> {
     fn lookahead(&self, position: usize) -> Option<char> {
         return self.delegate.lookahead(position);
     }
@@ -70,7 +68,7 @@ impl BufferedStream<Option<char>> for SimpleAnalyzableStream {
     }
 }
 
-impl TextStream for SimpleAnalyzableStream {
+impl <'a> TextStream for SimpleAnalyzableStream<'a> {
     fn get_text(&self) -> String {
         return self.delegate.get_text();
     }
@@ -84,7 +82,7 @@ impl TextStream for SimpleAnalyzableStream {
     }
 }
 
-impl AccumulatorStream for SimpleAnalyzableStream {
+impl <'a> AccumulatorStream for SimpleAnalyzableStream<'a> {
     fn clear(&mut self) {
         self.accumulator.clear();
     }
@@ -101,4 +99,8 @@ impl AccumulatorStream for SimpleAnalyzableStream {
     fn revise_all(&self) -> String {
         return self.accumulator.clone();
     }
+}
+
+impl <'a> AnalyzableStream for SimpleAnalyzableStream<'a> {
+
 }

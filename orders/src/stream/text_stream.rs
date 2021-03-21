@@ -18,23 +18,23 @@ pub trait TextStream : BufferedStream<Option<char>> {
 }
 
 /// A trivial implementation of a TextStream.
-pub struct SimpleTextStream {
+pub struct SimpleTextStream<'a> {
     /// The backend for this stream that manages
     /// all the hard work.
-    pub delegate: SimpleBufferedStream<Option<char>>,
+    pub delegate: SimpleBufferedStream<'a, Option<char>>,
 }
 
-impl SimpleTextStream {
+impl <'a> SimpleTextStream<'a> {
     pub fn new(
-        delegate: SimpleBufferedStream<Option<char>>
-    ) -> SimpleTextStream {
-        return SimpleTextStream {
+        delegate: SimpleBufferedStream<'a, Option<char>>
+    ) -> SimpleTextStream<'a> {
+        return SimpleTextStream::<'a> {
             delegate: delegate,
         };
     }
 }
 
-impl Stream<Option<char>> for SimpleTextStream {
+impl <'a> Stream<Option<char>> for SimpleTextStream<'a> {
     fn get_end_value(&self) -> Option<char> {
         return self.delegate.get_end_value();
     }
@@ -52,7 +52,7 @@ impl Stream<Option<char>> for SimpleTextStream {
     }
 }
 
-impl BufferedStream<Option<char>> for SimpleTextStream {
+impl <'a> BufferedStream<Option<char>> for SimpleTextStream<'a> {
     fn lookahead(&self, position: usize) -> Option<char> {
         return self.delegate.lookahead(position);
     }
@@ -62,7 +62,7 @@ impl BufferedStream<Option<char>> for SimpleTextStream {
     }
 }
 
-impl TextStream for SimpleTextStream {
+impl <'a> TextStream for SimpleTextStream<'a> {
     fn get_text(&self) -> String {
         let mut result = String::new();
 

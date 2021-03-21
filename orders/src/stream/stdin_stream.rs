@@ -12,7 +12,7 @@ pub struct StdinStream {
     pub backend: BufReader<Stdin>,
     /// Buffer for decoding UTF-8.
     pub buffer: Vec<char>,
-    /// next buffer item
+    /// Next buffer item.
     pub next: usize,
 }
 

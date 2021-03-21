@@ -12,14 +12,14 @@ pub trait BufferedStream<T : Eq> : Stream<T> {
 }
 
 /// A trivial implementation of a BufferedStream<T>.
-pub struct SimpleBufferedStream<T : Eq + Copy> {
+pub struct SimpleBufferedStream<'a, T : Eq + Copy> {
     /// The size of the inner buffer.
     pub buffer_size: usize,
     /// The number of visited characters
     /// to save.
     pub buffer_indent: usize,
     /// The stream used as a backend.
-    pub backend: Box<dyn Stream<T>>,
+    pub backend: &'a mut (dyn Stream<T> + 'a),
     /// Points to the element that
     /// will be returned at the next
     /// peek() call. peek_index should
@@ -34,14 +34,14 @@ pub struct SimpleBufferedStream<T : Eq + Copy> {
     pub buffer: Vec<T>,
 }
 
-impl<T : Eq + Copy> SimpleBufferedStream<T> {
+impl<'a, T : Eq + Copy> SimpleBufferedStream<'a, T> {
     pub fn new(
-        backend: Box<dyn Stream<T>>,
+        backend: &'a mut (dyn Stream<T> + 'a),
         buffer_size: usize,
         buffer_indent: usize,
         default: T
-    ) -> SimpleBufferedStream<T> {
-        let mut that = SimpleBufferedStream {
+    ) -> SimpleBufferedStream<'a, T> {
+        let mut that = SimpleBufferedStream::<'a> {
             buffer_size: buffer_size,
             buffer_indent: buffer_indent,
             backend: backend,
@@ -59,7 +59,7 @@ impl<T : Eq + Copy> SimpleBufferedStream<T> {
     }
 }
 
-impl<T : Eq + Copy> Stream<T> for SimpleBufferedStream<T> {
+impl<'a, T : Eq + Copy> Stream<T> for SimpleBufferedStream<'a, T> {
     fn get_end_value(&self) -> T {
         return self.backend.get_end_value();
     }
@@ -94,7 +94,7 @@ impl<T : Eq + Copy> Stream<T> for SimpleBufferedStream<T> {
     }
 }
 
-impl<T: Eq + Copy> BufferedStream<T> for SimpleBufferedStream<T> {
+impl<'a, T: Eq + Copy> BufferedStream<T> for SimpleBufferedStream<'a, T> {
     fn lookahead(&self, position: usize) -> T {
         let mut index = self.peek_index + position;
 
