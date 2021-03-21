@@ -14,7 +14,9 @@ pub trait TextStream : BufferedStream<Option<char>> {
     fn match_text(&self, next: &str) -> usize;
 
     /// Returns the grab().unwrap().to_string().
-    fn grab_string(&mut self) -> String;
+    fn grab_string(&mut self) -> String {
+        return self.grab().unwrap().to_string();
+    }
 }
 
 /// A trivial implementation of a TextStream.
@@ -103,9 +105,5 @@ impl <'a> TextStream for SimpleTextStream<'a> {
         }
 
         return self.delegate.buffer_size;
-    }
-
-    fn grab_string(&mut self) -> String {
-        return self.grab().unwrap().to_string();
     }
 }

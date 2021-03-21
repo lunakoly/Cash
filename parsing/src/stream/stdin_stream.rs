@@ -1,5 +1,6 @@
 use crate::stream::*;
 use crate::stream::buffered_stream::*;
+use crate::stream::text_stream::*;
 
 use std::io::{Stdin, BufRead, BufReader};
 
@@ -80,5 +81,29 @@ impl BufferedStream<Option<char>> for StdinStream {
 
     fn get_buffer(&self) -> Vec<Option<char>> {
         return self.buffer.iter().map(|it| Some(it.clone())).collect();
+    }
+}
+
+impl TextStream for StdinStream {
+    fn get_text(&self) -> String {
+        return self.buffer.iter().collect();
+    }
+
+    fn match_text(&self, next: &str) -> usize {
+        let mut iterator = next.chars().peekable();
+
+        for it in self.next..self.buffer.len() {
+            if let Some(&next) = iterator.peek() {
+                if next == self.buffer[it] {
+                    iterator.next();
+                } else {
+                    return 0;
+                }
+            } else {
+                return it - self.next;
+            }
+        }
+
+        return self.buffer.len() - self.next;
     }
 }

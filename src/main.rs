@@ -8,24 +8,6 @@ use parsing::stream::analyzable_stream::{SimpleAnalyzableStream};
 
 use cash::Node;
 
-// fn main() {
-//     println!("Starting: ");
-
-//     let mut raw_user_input = StdinStream::new();
-//     let mut analyzable_stream = SimpleAnalyzableStream::acquire(16, 5, &mut raw_user_input);
-
-//     let mut ast = cherry::parse(&mut analyzable_stream);
-
-//     ast.accept_leveled_visitor(&mut cherry::ASTPrinter, 0);
-
-//     let stdout = stdout();
-//     let message = String::from("Done!");
-//     let width = message.chars().count();
-
-//     let mut writer = BufWriter::new(stdout.lock());
-//     say(message.as_bytes(), width, &mut writer).unwrap();
-// }
-
 fn main() {
     println!("Starting: ");
 

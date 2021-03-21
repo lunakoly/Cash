@@ -1,7 +1,6 @@
 use crate::stream::*;
-use crate::stream::buffered_stream::*;
 
-pub trait BurstStream : BufferedStream<Option<char>> {}
+pub trait BurstStream : Stream<Option<char>> {}
 
 /// This stream can mimic
 /// user input with spaces
@@ -11,7 +10,7 @@ pub trait BurstStream : BufferedStream<Option<char>> {}
 /// streams require some lookahead.
 pub struct SimpleBurstStream<'a> {
     /// Delegate for all operations.
-    pub backend: &'a mut (dyn BufferedStream<Option<char>> + 'a),
+    pub backend: &'a mut (dyn Stream<Option<char>> + 'a),
     /// Used to make the stream
     /// return blanks instead of
     /// real characters when
@@ -29,7 +28,7 @@ pub struct SimpleBurstStream<'a> {
 
 impl <'a> SimpleBurstStream<'a> {
     pub fn new(
-        backend: &'a mut (dyn BufferedStream<Option<char>> + 'a),
+        backend: &'a mut (dyn Stream<Option<char>> + 'a),
         maximum_lock_length: usize,
     ) -> SimpleBurstStream<'a> {
         return SimpleBurstStream::<'a> {
@@ -74,20 +73,6 @@ impl <'a> Stream<Option<char>> for SimpleBurstStream<'a> {
 
     fn get_offset(&self) -> usize {
         return self.backend.get_offset();
-    }
-}
-
-impl <'a> BufferedStream<Option<char>> for SimpleBurstStream<'a> {
-    fn lookahead(&self, position: usize) -> Option<char> {
-        if let Some(value) = self.backend.lookahead(position) {
-            Some(value)
-        } else {
-            Some(' ')
-        }
-    }
-
-    fn get_buffer(&self) -> Vec<Option<char>> {
-        return self.backend.get_buffer();
     }
 }
 
