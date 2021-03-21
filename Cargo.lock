@@ -90,21 +90,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "cash"
+version = "0.1.0"
+dependencies = [
+ "building",
+ "parsing",
+ "serde_json",
+]
+
+[[package]]
 name = "cfg-if"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 
 [[package]]
+name = "cherry"
+version = "0.1.0"
+dependencies = [
+ "building",
+ "parsing",
+ "serde_json",
+]
+
+[[package]]
 name = "cherrylog"
 version = "0.1.0"
 dependencies = [
- "Inflector",
  "building",
- "degen",
+ "cash",
+ "cherry",
  "ferris-says",
- "orders",
- "serde_json",
+ "parsing",
 ]
 
 [[package]]
@@ -226,7 +243,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ad167a2f54e832b82dbe003a046280dceffe5227b5f79e08e363a29638cfddd"
 
 [[package]]
-name = "orders"
+name = "parsing"
 version = "0.1.0"
 
 [[package]]

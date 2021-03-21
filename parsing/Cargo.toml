@@ -1,5 +1,5 @@
 [package]
-name = "orders"
+name = "parsing"
 version = "0.1.0"
 authors = ["Nick <lunyak.kolya@mail.ru>"]
 edition = "2018"
