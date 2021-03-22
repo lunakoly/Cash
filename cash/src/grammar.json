@@ -1,0 +1,65 @@
+{
+    "rules": {
+        "leaf": [
+            "#string",
+            "#number",
+            "( @expression )"
+        ],
+        "command": [
+            "@leaf @command",
+            "@leaf"
+        ],
+        "pipeline": [
+            "@command | @pipeline",
+            "@command"
+        ],
+        "unary": [
+            "+ @pipeline",
+            "- @pipeline",
+            "not @pipeline",
+            "@pipeline"
+        ],
+        "power": [
+            "@unary ** @power",
+            "@unary"
+        ],
+        "times": [
+            "@power * @times",
+            "@power / @times",
+            "@power % @times",
+            "@power"
+        ],
+        "plus": [
+            "@times + @plus",
+            "@times - @plus",
+            "@times"
+        ],
+        "comparison": [
+            "@plus in @comparison",
+            "@plus < @comparison",
+            "@plus > @comparison",
+            "@plus < = @comparison",
+            "@plus > = @comparison",
+            "@plus"
+        ],
+        "equality": [
+            "@comparison = = @equality",
+            "@comparison ! = @equality",
+            "@comparison"
+        ],
+        "high_logic": [
+            "@equality and @high_logic",
+            "@equality nand @high_logic",
+            "@equality"
+        ],
+        "low_logic": [
+            "@high_logic or @low_logic",
+            "@high_logic xor @low_logic",
+            "@high_logic xnor @low_logic",
+            "@high_logic"
+        ],
+        "expression": [
+            "@low_logic"
+        ]
+    }
+}

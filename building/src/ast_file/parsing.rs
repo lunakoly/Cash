@@ -39,7 +39,14 @@ fn parse_nodes(nodes_json: &Value) -> Vec<NodeInfo> {
 }
 
 fn parse_visitors(visitors_json: &Value) -> Vec<VisitorInfo> {
-    let mut visitors = vec!();
+    let mut visitors = vec![
+        VisitorInfo {
+            name: "LeveledVisitor".to_owned(),
+            accepts: "usize".to_owned(),
+            returns: "".to_owned(),
+            default: "".to_owned(),
+        }
+    ];
 
     for (visitor, visitor_body) in visitors_json.as_object().unwrap() {
         visitors.push(VisitorInfo {
@@ -62,6 +69,8 @@ fn enhance_fields_types(ast_file: &mut ASTFile) {
         for field in &mut node.fields {
             if field.proto == "Box<dyn Node>" {
                 field.proto = "Box<dyn crate::Node>".to_owned();
+            } else if field.proto == "Box<dyn Value>" {
+                field.proto = "Box<dyn crate::value::Value>".to_owned();
             } else if field.proto == "Vec<Box<dyn Node>>" {
                 field.proto = "Vec<Box<dyn crate::Node>>".to_owned();
             } else if field.proto == "Option<Box<dyn Node>>" {

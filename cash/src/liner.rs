@@ -262,6 +262,7 @@ impl <'a> Liner<'a> {
 
             match next {
                 Token::Newline => break,
+                Token::End => break,
                 _ => {},
             }
         }
