@@ -1,34 +1,37 @@
-pub mod tokenization;
+pub mod lexer;
+pub mod liner;
 
 include!(concat!(env!("OUT_DIR"), "/ast.rs"));
 
 use nodes::*;
 
-use parsing::stream::analyzable_stream::{AnalyzableStream};
+use parsing::stream::*;
 
-use tokenization::{Token, base_to_suffix};
+use crate::lexer::{Token};
+use crate::liner::{base_to_suffix};
 
 pub fn parse<'a>(
-    stream: &'a mut (dyn AnalyzableStream + 'a)
+    stream: &'a mut (dyn Stream<Vec<Token>> + 'a)
 ) -> File {
-    let tokens = tokenization::process_input(stream);
+    let mut leafs = vec![];
 
-    let leafs: Vec<Box<dyn Node>> = tokens.iter()
-        .map(|it| {
+    for token in stream.grab() {
+        leafs.push(
             Box::new(
                 Leaf {
-                    value: match it {
+                    value: match token {
                         Token::Operator { value } => value.clone(),
-                        Token::NumberSegment { value, base } => value.clone() + &base_to_suffix(*base) + "[segment]",
-                        Token::Number { value, base } => value.clone() + &base_to_suffix(*base),
+                        Token::NumberSegment { value, base } => value.clone() + &base_to_suffix(base) + "[segment]",
+                        Token::Number { value, base } => value.clone() + &base_to_suffix(base),
                         Token::String { value } => value.clone(),
                         Token::Whitespace { value: _ } => "<whitespace>".to_owned(),
                         Token::Newline => "<newline>".to_owned(),
-                    },
+                        Token::End => "<end>".to_owned(),
+                    }
                 }
             ) as Box<dyn Node>
-        })
-        .collect();
+        );
+    }
 
     return File {
         declarations: leafs,

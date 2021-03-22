@@ -1,224 +1,6 @@
-use parsing::stream::analyzable_stream::{AnalyzableStream};
+use parsing::stream::*;
 
-#[derive(Clone, PartialEq, Debug)]
-pub enum Token {
-    Operator {
-        value: String
-    },
-    NumberSegment {
-        value: String,
-        base: u8
-    },
-    Number {
-        value: String,
-        base: u8
-    },
-    String {
-        value: String
-    },
-    Whitespace {
-        value: String
-    },
-    Newline,
-}
-
-pub const OPERATORS: &'static str = ":=+-*%$#@!&^|/.~()[]{}<>;,";
-
-struct Context<'a> {
-    tokens: Vec<Token>,
-    stream: &'a mut (dyn AnalyzableStream + 'a),
-}
-
-fn is_whitespace(symbol: char) -> bool {
-    return " \t".contains(symbol);
-}
-
-fn is_opearator(symbol: char) -> bool {
-    return OPERATORS.contains(symbol);
-}
-
-fn is_binary(symbol: char) -> bool {
-    return ('0'..='1').contains(&symbol);
-}
-
-fn is_octal(symbol: char) -> bool {
-    return ('0'..='7').contains(&symbol);
-}
-
-fn is_decimal(symbol: char) -> bool {
-    return ('0'..='9').contains(&symbol);
-}
-
-fn is_hexadecimal(symbol: char) -> bool {
-    return
-        ('0'..='9').contains(&symbol) ||
-        ('a'..='f').contains(&symbol) ||
-        ('A'..='F').contains(&symbol);
-}
-
-fn is_implicit_string_content(symbol: char) -> bool {
-    return
-        !is_opearator(symbol) &&
-        !is_whitespace(symbol) &&
-        symbol != '\n';
-}
-
-fn read_escape(context: &mut Context) {
-    if context.stream.peek() == Some('\n') {
-        context.tokens.push(Token::Newline);
-    }
-}
-
-fn read_whitespace(context: &mut Context) {
-    while let Some(symbol) = context.stream.peek() {
-        if is_whitespace(symbol) {
-            context.stream.step();
-        } else {
-            break;
-        }
-    }
-
-    context.tokens.push(
-        Token::Whitespace { value: context.stream.revise_all() }
-    );
-}
-
-fn read_binary(context: &mut Context) {
-    while let Some(symbol) = context.stream.peek() {
-        if is_binary(symbol) {
-            context.stream.step();
-        } else {
-            break;
-        }
-    }
-
-    context.tokens.push(
-        Token::NumberSegment {
-            value: context.stream.revise_all(),
-            base: 2,
-        }
-    );
-}
-
-fn read_octal(context: &mut Context) {
-    while let Some(symbol) = context.stream.peek() {
-        if is_octal(symbol) {
-            context.stream.step();
-        } else {
-            break;
-        }
-    }
-
-    context.tokens.push(
-        Token::NumberSegment {
-            value: context.stream.revise_all(),
-            base: 8,
-        }
-    );
-}
-
-fn read_decimal(context: &mut Context) {
-    while let Some(symbol) = context.stream.peek() {
-        if is_decimal(symbol) {
-            context.stream.step();
-        } else {
-            break;
-        }
-    }
-
-    context.tokens.push(
-        Token::NumberSegment {
-            value: context.stream.revise_all(),
-            base: 10,
-        }
-    );
-}
-
-fn read_hexadecimal(context: &mut Context) {
-    while let Some(symbol) = context.stream.peek() {
-        if is_hexadecimal(symbol) {
-            context.stream.step();
-        } else {
-            break;
-        }
-    }
-
-    context.tokens.push(
-        Token::NumberSegment {
-            value: context.stream.revise_all(),
-            base: 16,
-        }
-    );
-}
-
-fn read_implicit_string(context: &mut Context) {
-    while let Some(symbol) = context.stream.peek() {
-        if is_implicit_string_content(symbol) {
-            context.stream.step();
-        } else {
-            break;
-        }
-    }
-
-    context.tokens.push(
-        Token::String { value: context.stream.revise_all() }
-    );
-}
-
-pub fn tokenize<'a>(
-    stream: &'a mut (dyn AnalyzableStream + 'a)
-) -> Vec<Token> {
-    if !stream.has_next() {
-        return vec![];
-    }
-
-    let mut context = Context {
-        tokens: vec![],
-        stream: stream,
-    };
-
-    while let Some(symbol) = context.stream.peek() {
-        context.stream.clear();
-
-        if symbol == '\\' {
-            context.stream.step();
-            read_escape(&mut context);
-        } else if symbol == '\n' {
-            context.tokens.push(Token::Newline);
-            context.stream.step();
-            break;
-        } else if is_whitespace(symbol) {
-            context.stream.step();
-            read_whitespace(&mut context);
-        } else if is_opearator(symbol) {
-            context.stream.step();
-            context.tokens.push(Token::Operator { value: String::from(symbol) });
-        } else if is_binary(symbol) {
-            context.stream.step();
-            read_binary(&mut context);
-        } else if is_octal(symbol) {
-            context.stream.step();
-            read_octal(&mut context);
-        } else if is_decimal(symbol) {
-            context.stream.step();
-            read_decimal(&mut context);
-        } else if is_hexadecimal(symbol) {
-            context.stream.step();
-            read_hexadecimal(&mut context);
-        } else {
-            context.stream.step();
-            read_implicit_string(&mut context);
-        }
-    }
-
-    println!("Initial Tokens:");
-    for it in &context.tokens {
-        println!("    {:?}", it);
-    }
-    println!("");
-
-    return context.tokens;
-}
+use crate::lexer::{Token};
 
 pub fn transform(
     tokens: &[Token],
@@ -463,22 +245,83 @@ fn transform_tight_strings(
     }
 }
 
-pub fn process_input<'a>(
-    stream: &'a mut (dyn AnalyzableStream + 'a)
-) -> Vec<Token> {
-    let mut tokens = tokenize(stream);
+pub struct Liner<'a> {
+    pub backend: &'a mut (dyn Stream<Token> + 'a),
+    pub line: Vec<Token>,
+    pub should_read: bool,
+    pub line_number: usize,
+}
 
-    tokens = transform(&tokens, &transform_duplicate_whitespaces);
-    tokens = transform(&tokens, &transform_numbers);
-    tokens = transform(&tokens, &transform_tight_strings);
+impl <'a> Liner<'a> {
+    fn read_line(&mut self) {
+        self.line.clear();
 
-    tokens = tokens.iter()
-        .filter(|&it| match it {
-            Token::Whitespace { value: _ } => false,
-            _ => true,
-        })
-        .cloned()
-        .collect();
+        loop {
+            let next = self.backend.grab();
+            self.line.push(next.clone());
 
-    return tokens;
+            match next {
+                Token::Newline => break,
+                _ => {},
+            }
+        }
+
+        println!("Initial Tokens:");
+        for it in &self.line {
+            println!("    {:?}", it);
+        }
+        println!("");
+
+        self.line = transform(&self.line, &transform_duplicate_whitespaces);
+        self.line = transform(&self.line, &transform_numbers);
+        self.line = transform(&self.line, &transform_tight_strings);
+
+        self.line = self.line.iter()
+            .filter(|&it| match it {
+                Token::Whitespace { value: _ } => false,
+                _ => true,
+            })
+            .cloned()
+            .collect();
+
+        self.line_number += 1;
+        self.should_read = false;
+    }
+
+    pub fn new(
+        backend: &'a mut (dyn Stream<Token> + 'a),
+    ) -> Liner<'a> {
+        return Liner::<'a> {
+            backend: backend,
+            line: vec![],
+            line_number: 1,
+            should_read: true
+        };
+    }
+}
+
+impl <'a> Stream<Vec<Token>> for Liner<'a> {
+    fn get_end_value(&self) -> Vec<Token> {
+        return vec![];
+    }
+
+    fn peek(&mut self) -> Vec<Token> {
+        if self.should_read {
+            self.read_line();
+        }
+
+        return self.line.clone();
+    }
+
+    fn step(&mut self) {
+        if self.should_read {
+            self.read_line();
+        }
+
+        self.should_read = true;
+    }
+
+    fn get_offset(&self) -> usize {
+        return self.line_number;
+    }
 }

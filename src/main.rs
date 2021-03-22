@@ -3,20 +3,22 @@ use ferris_says::say;
 use std::io::{stdout, BufWriter};
 
 use parsing::stream::stdin_stream::{StdinStream};
-use parsing::stream::burst_stream::{SimpleBurstStream};
-use parsing::stream::analyzable_stream::{SimpleAnalyzableStream};
+use parsing::stream::accumulator_stream::{SimpleAccumulatorStream};
 
 use cash::Node;
+use cash::lexer::{Lexer};
+use cash::liner::{Liner};
 
 fn main() {
     println!("Starting: ");
 
-    let mut raw_user_input = StdinStream::new();
-    let mut user_input = SimpleBurstStream::new(&mut raw_user_input, 16);
-    let mut analyzable_stream = SimpleAnalyzableStream::acquire(16, 5, &mut user_input);
+    let mut user_input = StdinStream::new();
+    let mut accumulator_stream = SimpleAccumulatorStream::new(&mut user_input);
+    let mut tokenizer = Lexer::new(&mut accumulator_stream);
+    let mut liner = Liner::new(&mut tokenizer);
 
     loop {
-        let mut ast = cash::parse(&mut analyzable_stream);
+        let mut ast = cash::parse(&mut liner);
 
         ast.accept_leveled_visitor(&mut cash::ASTPrinter, 0);
 

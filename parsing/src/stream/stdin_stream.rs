@@ -15,6 +15,22 @@ pub struct StdinStream {
     pub buffer: Vec<char>,
     /// Next buffer item.
     pub next: usize,
+    /// If true, a new line should be
+    /// read.
+    ///
+    /// The old approach was to read
+    /// a new line as soon as the old one is
+    /// finished (we meet `\n`), so the buffer
+    /// would store a new line. But when we work
+    /// with user interactive input, this means,
+    /// we force the user to enter one more
+    /// line in order to finish processing the
+    /// previous one at its `\n`.
+    ///
+    /// The new approach first sets the flag and
+    /// only reads the next line if the first
+    /// character of it is needed.
+    pub should_read: bool,
 }
 
 impl StdinStream {
@@ -24,21 +40,20 @@ impl StdinStream {
             backend: BufReader::new(std::io::stdin()),
             buffer: vec![],
             next: 0,
+            should_read: true,
         }
     }
 
-    fn can_read_more(&mut self) -> bool {
-        if self.next >= self.buffer.len() {
-            let mut buffer = vec![];
+    fn read_next_line(&mut self) {
+        self.next = 0;
+        let mut buffer = vec![];
 
-            if let Ok(_) = self.backend.read_until(b'\n', &mut buffer) {
-                self.offset += self.buffer.len();
-                self.buffer = String::from_utf8_lossy(&buffer).replace('\r', "").chars().collect();
-                self.next = 0;
-            }
+        if let Ok(_) = self.backend.read_until(b'\n', &mut buffer) {
+            self.offset += self.buffer.len();
+            self.buffer = String::from_utf8_lossy(&buffer).replace('\r', "").chars().collect();
         }
 
-        return self.next < self.buffer.len();
+        self.should_read = false;
     }
 }
 
@@ -48,24 +63,30 @@ impl Stream<Option<char>> for StdinStream {
     }
 
     fn peek(&mut self) -> Option<char> {
-        if self.can_read_more() {
-            return Some(self.buffer[self.next]);
+        if self.should_read {
+            self.read_next_line();
         }
 
-        return None;
+        if self.next >= self.buffer.len() {
+            return self.get_end_value();
+        }
+
+        return Some(self.buffer[self.next]);
     }
 
     fn step(&mut self) {
-        if self.can_read_more() {
+        if self.should_read {
+            self.read_next_line();
+        }
+
+        if self.next >= self.buffer.len() - 1 {
+            self.should_read = true;
+        } else {
             self.next += 1;
-            // ensure the index is within the
-            // buffer size or, at least, 0
-            self.can_read_more();
         }
     }
 
     fn get_offset(&self) -> usize {
-        println!("Cache: {:?}, next: {}", self.buffer, self.next);
         return self.next + self.offset;
     }
 }
