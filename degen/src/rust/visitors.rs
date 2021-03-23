@@ -76,13 +76,14 @@ pub fn render_node(visitors: &Vec<VisitorInfo>) -> String {
 }
 
 pub fn render_impl_node(node: &NodeInfo, visitors: &Vec<VisitorInfo>) -> String {
+    let full_name = "nodes::".to_owned() + &node.name;
     let mut pieces = vec![];
 
     for it in visitors {
         pieces.push(render_accept(it, &node.name));
     }
 
-    return render_impl("Node", &node.name, &pieces.join("\n\n"), 0);
+    return render_impl("Node", &full_name, &pieces.join("\n\n"), 0);
 }
 
 const VISIT_TEMPLATE: &'static str = "

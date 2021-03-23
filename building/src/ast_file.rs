@@ -14,6 +14,9 @@ fn render_nodes(ast_file: &ASTFile) -> String {
     let mut structs = vec![];
 
     for it in &ast_file.nodes {
+        // let derives = render_derive(&["Clone"], 4);
+        // let node = render_struct(&it.name, &it.fields, 4);
+        // structs.push(derives + "\n" + &node);
         let node = render_struct(&it.name, &it.fields, 4);
         structs.push(node);
     }
@@ -89,9 +92,9 @@ fn render_ast_printer(ast_file: &ASTFile) -> String {
         for that in &it.fields {
             if that.proto.starts_with("Vec") {
                 commands.push(render_print_list_field(&that.name, 0));
-            } else if that.proto == "Option<Box<dyn crate::Node>>" {
+            } else if that.proto == "Option<Box<dyn crate::ast::Node>>" {
                 commands.push(render_print_option_node_field(&that.name, 0));
-            } else if that.proto == "Box<dyn crate::Node>" {
+            } else if that.proto == "Box<dyn crate::ast::Node>" {
                 commands.push(render_print_simple_field(&that.name, 0));
             } else {
                 commands.push(render_print_debug_field(&that.name, 0));

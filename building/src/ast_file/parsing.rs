@@ -68,13 +68,13 @@ fn enhance_fields_types(ast_file: &mut ASTFile) {
     for node in &mut ast_file.nodes {
         for field in &mut node.fields {
             if field.proto == "Box<dyn Node>" {
-                field.proto = "Box<dyn crate::Node>".to_owned();
+                field.proto = "Box<dyn crate::ast::Node>".to_owned();
             } else if field.proto == "Box<dyn Value>" {
                 field.proto = "Box<dyn crate::value::Value>".to_owned();
             } else if field.proto == "Vec<Box<dyn Node>>" {
-                field.proto = "Vec<Box<dyn crate::Node>>".to_owned();
+                field.proto = "Vec<Box<dyn crate::ast::Node>>".to_owned();
             } else if field.proto == "Option<Box<dyn Node>>" {
-                field.proto = "Option<Box<dyn crate::Node>>".to_owned();
+                field.proto = "Option<Box<dyn crate::ast::Node>>".to_owned();
             } else if node_names.contains(&field.proto) {
                 field.proto = "crate::".to_owned() + &field.proto;
             }

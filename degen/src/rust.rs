@@ -76,3 +76,12 @@ const MOD_TEMPLATE: &'static str = "
 pub fn render_mod(mod_name: &str, contents: &str, indent: usize) -> String {
     return render(MOD_TEMPLATE, indent, &[mod_name, contents]);
 }
+
+const DERIVE_TEMPLATE: &'static str = "
+    #[derive($$)]
+";
+
+/// Returns the #[derive(...)] statement
+pub fn render_derive(traits: &[&str], indent: usize) -> String {
+    return render(DERIVE_TEMPLATE, indent, &[&traits.join(", ")]);
+}

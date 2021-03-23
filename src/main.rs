@@ -2,12 +2,13 @@ use ferris_says::say;
 
 use std::io::{stdout, BufWriter};
 
+use parsing::stream::{Stream};
 use parsing::stream::stdin_stream::{StdinStream};
 use parsing::stream::accumulator_stream::{SimpleAccumulatorStream};
 
-use cash::Node;
+use cash::ast::*;
 use cash::lexer::{Lexer};
-use cash::liner::{Liner};
+use cash::parser::{Parser};
 
 fn main() {
     println!("Starting: ");
@@ -15,12 +16,13 @@ fn main() {
     let mut user_input = StdinStream::new();
     let mut accumulator_stream = SimpleAccumulatorStream::new(&mut user_input);
     let mut tokenizer = Lexer::new(&mut accumulator_stream);
-    let mut liner = Liner::new(&mut tokenizer);
+    let mut parser = Parser::new(&mut tokenizer);
 
     loop {
-        let mut ast = cash::parse(&mut liner);
+        let wrapped = parser.grab();
+        let mut ast = wrapped.borrow_mut();
 
-        ast.accept_leveled_visitor(&mut cash::ASTPrinter, 0);
+        ast.accept_leveled_visitor(&mut cash::ast::ASTPrinter, 0);
 
         let stdout = stdout();
         let message = String::from("Done!");
