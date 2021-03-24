@@ -21,6 +21,13 @@
             "operator": "Box<dyn Node>",
             "righter": "Box<dyn Node>"
         },
+        "Expressions": {
+            "values": "Vec<Box<dyn Node>>"
+        },
+        "Closure": {
+            "arguments": "Box<dyn Node>",
+            "body": "Box<dyn Node>"
+        },
         "File": {
             "declarations": "Vec<Box<dyn Node>>"
         }

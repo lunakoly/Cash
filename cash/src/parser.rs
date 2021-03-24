@@ -3,10 +3,6 @@ use parsing::stream::*;
 use crate::lexer::{Token};
 use crate::liner::{Liner};
 
-// use crate::value::*;
-// use crate::value::string::{StringValue};
-// use crate::value::number::{NumberValue};
-
 use crate::ast::*;
 use crate::ast::nodes::*;
 
@@ -18,6 +14,7 @@ use std::cell::RefCell;
 fn is_same_type(token_type: &str, token: &Token) -> bool {
     match token {
         Token::Operator { .. } => token_type == "operator",
+        Token::Delimiter { .. } => token_type == "delimiter",
         Token::Number { .. } => token_type == "number",
         Token::String { .. } => token_type == "string",
         Token::Whitespace { .. } => token_type == "whitespace",
@@ -30,6 +27,7 @@ fn is_same_type(token_type: &str, token: &Token) -> bool {
 fn get_token_value(token: &Token) -> Option<&str> {
     match token {
         Token::Operator { value } => Some(value),
+        Token::Delimiter { value } => Some(value),
         Token::Number { value, .. } => Some(value),
         Token::String { value } => Some(value),
         _ => None,
@@ -38,13 +36,10 @@ fn get_token_value(token: &Token) -> Option<&str> {
 
 fn get_rule_by_name<'a>(rules: &'a Vec<Rule>, name: &str) -> Option<&'a Rule<'a>> {
     for rule in rules {
-        println!("Checking: {:?} == {:?}", rule.name, name);
         if rule.name == name {
             return Some(rule as &'a Rule);
         }
     }
-
-    println!("Not found: {:?}", name);
 
     return None;
 }
@@ -98,7 +93,6 @@ fn apply_item(
         );
     }
 
-    println!("ITEM NOT FOUND: {:?} for {:?}", item, tokens[token_index]);
     return (None, token_index);
 }
 
@@ -153,7 +147,6 @@ fn apply_simple_rule(
         }
     }
 
-    println!("SIMPLE RULE NOT FOUND [{:?}]", rule_name);
     return (None, token_index);
 }
 
@@ -182,7 +175,7 @@ fn apply_rule(
                     );
 
                     if let Some(mut values) = maybe_values {
-                        values.push(thing);
+                        values.insert(0, thing);
                         thing = (branch.handler)(values);
                         moved_token_index = new_token_index;
                         applied = true;
@@ -197,47 +190,26 @@ fn apply_rule(
         return (result, moved_token_index);
     }
 
-    println!("RULE NOT FOUND [{:?}]", rule_name);
     return (None, token_index);
 }
 
-impl PartialEq for File {
+impl PartialEq for Expressions {
     fn eq(&self, other: &Self) -> bool {
-        return self.declarations.is_empty() && other.declarations.is_empty();
+        return self.values.is_empty() && other.values.is_empty();
     }
 }
 
-impl Eq for File {}
+impl Eq for Expressions {}
 
 pub struct Parser<'a> {
     pub backend: Liner<'a>,
-    pub last_ast: Rc<RefCell<File>>,
+    pub last_ast: Rc<RefCell<Expressions>>,
     pub should_read: bool,
     pub rules: Vec<Rule<'a>>,
 }
 
 impl <'a> Parser<'a> {
     fn parse(&mut self) {
-        // let mut leafs = vec![];
-
-        // for token in self.backend.grab() {
-        //     leafs.push(
-        //         Box::new(
-        //             Leaf {
-        //                 value: token
-        //             }
-        //         ) as Box<dyn Node>
-        //     );
-        // }
-
-        // self.last_ast = Rc::new(
-        //     RefCell::new(
-        //         File {
-        //             declarations: leafs,
-        //         }
-        //     )
-        // );
-
         let tokens = self.backend.grab();
         let (ast, _) = apply_rule(
             &self.rules,
@@ -249,16 +221,16 @@ impl <'a> Parser<'a> {
         if let Some(thing) = ast {
             self.last_ast = Rc::new(
                 RefCell::new(
-                    File {
-                        declarations: vec![thing]
+                    Expressions {
+                        values: vec![thing]
                     }
                 )
             );
         } else {
             self.last_ast = Rc::new(
                 RefCell::new(
-                    File {
-                        declarations: vec![
+                    Expressions {
+                        values: vec![
                             Box::new(
                                 Leaf {
                                     value: Token::String {
@@ -272,7 +244,6 @@ impl <'a> Parser<'a> {
             );
         }
 
-
         self.should_read = false;
     }
 
@@ -283,8 +254,8 @@ impl <'a> Parser<'a> {
             backend: Liner::<'a>::new(backend),
             last_ast: Rc::new(
                 RefCell::new(
-                    File {
-                        declarations: vec![]
+                    Expressions {
+                        values: vec![]
                     }
                 )
             ),
@@ -294,18 +265,18 @@ impl <'a> Parser<'a> {
     }
 }
 
-impl <'a> Stream<Rc<RefCell<File>>> for Parser<'a> {
-    fn get_end_value(&self) -> Rc<RefCell<File>> {
+impl <'a> Stream<Rc<RefCell<Expressions>>> for Parser<'a> {
+    fn get_end_value(&self) -> Rc<RefCell<Expressions>> {
         return Rc::new(
             RefCell::new(
-                File {
-                    declarations: vec![]
+                Expressions {
+                    values: vec![]
                 }
             )
         );
     }
 
-    fn peek(&mut self) -> Rc<RefCell<File>> {
+    fn peek(&mut self) -> Rc<RefCell<Expressions>> {
         if self.should_read {
             self.parse();
         }

@@ -60,9 +60,9 @@ fn render_rule(rule: &Rule, indent: usize) -> String {
 
     for it in &rule.branches {
         if it.pattern[0] == "@".to_owned() + &rule.name {
-            recursive_branches.push(render_branch(it, indent + 4));
+            recursive_branches.push(render_branch(it, indent));
         } else {
-            simple_branches.push(render_branch(it, indent + 4));
+            simple_branches.push(render_branch(it, indent));
         }
     }
 

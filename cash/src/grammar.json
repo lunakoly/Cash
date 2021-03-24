@@ -26,7 +26,7 @@
             "@pipeline": "handle_pass"
         },
         "power": {
-            "@unary ** @power": "handle_binary",
+            "@unary ^ @power": "handle_binary",
             "@unary": "handle_pass"
         },
         "times": {
@@ -44,13 +44,13 @@
             "@comparison in @plus": "handle_binary",
             "@comparison < @plus": "handle_binary",
             "@comparison > @plus": "handle_binary",
-            "@comparison < = @plus": "handle_binary",
-            "@comparison > = @plus": "handle_binary",
+            "@comparison < = @plus": "handle_binary_long",
+            "@comparison > = @plus": "handle_binary_long",
             "@plus": "handle_pass"
         },
         "equality": {
-            "@equality = = @comparison": "handle_binary",
-            "@equality ! = @comparison": "handle_binary",
+            "@equality = = @comparison": "handle_binary_long",
+            "@equality ! = @comparison": "handle_binary_long",
             "@comparison": "handle_pass"
         },
         "high_logic": {

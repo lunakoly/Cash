@@ -6,6 +6,9 @@ pub enum Token {
     Operator {
         value: String
     },
+    Delimiter {
+        value: String
+    },
     NumberSegment {
         value: String,
         base: u8
@@ -24,14 +27,27 @@ pub enum Token {
     End,
 }
 
-pub const OPERATORS: &'static str = ":=+-*%$#@!&^|/.~()[]{}<>;,";
+/// Operators are symbols that get clued
+/// to the strings if there's no whitespace
+/// between them
+pub const OPERATORS: &'static str = ":=+-*%$#@!&^|/.~[]{}<>;,";
+/// Delimiters never clue to strings
+pub const DELIMITERS: &'static str = "()";
 
 fn is_whitespace(symbol: char) -> bool {
     return " \t".contains(symbol);
 }
 
-fn is_opearator(symbol: char) -> bool {
+fn is_operator(symbol: char) -> bool {
     return OPERATORS.contains(symbol);
+}
+
+fn is_delimiter(symbol: char) -> bool {
+    return DELIMITERS.contains(symbol);
+}
+
+fn is_control(symbol: char) -> bool {
+    return is_operator(symbol) || is_delimiter(symbol);
 }
 
 fn is_binary(symbol: char) -> bool {
@@ -55,7 +71,7 @@ fn is_hexadecimal(symbol: char) -> bool {
 
 fn is_implicit_string_content(symbol: char) -> bool {
     return
-        !is_opearator(symbol) &&
+        !is_control(symbol) &&
         !is_whitespace(symbol) &&
         symbol != '\n';
 }
@@ -181,9 +197,14 @@ impl <'a> Lexer<'a> {
             if is_whitespace(symbol) {
                 self.backend.step();
                 self.read_whitespace();
-            } else if is_opearator(symbol) {
+            } else if is_operator(symbol) {
                 self.backend.step();
                 self.last_token = Token::Operator {
+                    value: String::from(symbol)
+                };
+            } else if is_delimiter(symbol) {
+                self.backend.step();
+                self.last_token = Token::Delimiter {
                     value: String::from(symbol)
                 };
             } else if is_binary(symbol) {

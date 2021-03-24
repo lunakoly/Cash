@@ -111,18 +111,20 @@ fn render_ast_printer(ast_file: &ASTFile) -> String {
 }
 
 const EXTRACTOR: &'static str = "
-    pub struct Extractor<'a, T> {
-        pub action: &'a dyn Fn(&mut T) -> (),
+    pub struct Extractor<T, F: FnOnce(&mut T) -> ()> {
+        pub action: Option<F>,
         pub good: bool,
+        pub junk: Option<T>,
     }
 
-    impl <'a, T> Extractor<'a, T> {
-        fn new(
-            action: &'a dyn Fn(&mut T) -> ()
-        ) -> Extractor<'a, T> {
+    impl <T, F: FnOnce(&mut T) -> ()> Extractor<T, F> {
+        pub fn new(
+            action: F
+        ) -> Extractor<T, F> {
             Extractor {
-                action: action,
+                action: Some(action),
                 good: false,
+                junk: None,
             }
         }
     }
@@ -133,22 +135,26 @@ fn render_extractor_struct_and_impl() -> String {
 }
 
 const CONCRETE_EXTRACTOR: &'static str = "
-    impl <'a> SimpleVisitor for Extractor<'a, $$> {
+    impl <F: FnOnce(&mut $$) -> ()> SimpleVisitor for Extractor<$$, F> {
     $$
     }
 ";
 
 const EXTRACTION_CALL: &'static str = "
-    (self.action)(it);
-    self.good = true;
+    let that = std::mem::replace(&mut self.action, None);
+
+    if let Some(action) = that {
+        (action)(it);
+        self.good = true;
+    }
 ";
 
 fn render_extractor_for(node: &NodeInfo) -> String {
     let snake = node.name.to_snake_case();
     let node_name = "nodes::".to_owned() + &node.name;
-    let contents = render(EXTRACTION_CALL, 8, &[]);
+    let contents = render(EXTRACTION_CALL, 4, &[]);
     let visit = render(&VISIT_TEMPLATE_WITH_IT, 4, &[&snake, &node_name, "", "", &contents]);
-    return render(CONCRETE_EXTRACTOR, 0, &[&node_name, &visit]);
+    return render(CONCRETE_EXTRACTOR, 0, &[&node_name, &node_name, &visit]);
 }
 
 /// Parses the template as the ast.json file
