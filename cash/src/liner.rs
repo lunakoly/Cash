@@ -165,16 +165,16 @@ fn transform_numbers(
             Token::NumberSegment { value: last_value, base },
             _
         ) => {
-            if *base < 10 {
-                tokens.pop();
+            tokens.pop();
+
+            if *base <= 10 {
                 tokens.push(
                     Token::Number {
                         value: last_value.clone(),
                         base: 10,
                     }
                 );
-            } else if *base > 10 {
-                tokens.pop();
+            } else {
                 tokens.push(
                     Token::String { value: last_value.clone() }
                 );
