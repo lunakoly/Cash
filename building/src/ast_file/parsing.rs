@@ -45,6 +45,12 @@ fn parse_visitors(visitors_json: &Value) -> Vec<VisitorInfo> {
             accepts: "usize".to_owned(),
             returns: "".to_owned(),
             default: "".to_owned(),
+        },
+        VisitorInfo {
+            name: "SimpleVisitor".to_owned(),
+            accepts: "".to_owned(),
+            returns: "".to_owned(),
+            default: "".to_owned(),
         }
     ];
 
@@ -71,6 +77,8 @@ fn enhance_fields_types(ast_file: &mut ASTFile) {
                 field.proto = "Box<dyn crate::ast::Node>".to_owned();
             } else if field.proto == "Box<dyn Value>" {
                 field.proto = "Box<dyn crate::value::Value>".to_owned();
+            } else if field.proto == "Token" {
+                field.proto = "crate::lexer::Token".to_owned();
             } else if field.proto == "Vec<Box<dyn Node>>" {
                 field.proto = "Vec<Box<dyn crate::ast::Node>>".to_owned();
             } else if field.proto == "Option<Box<dyn Node>>" {

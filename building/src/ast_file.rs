@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use degen::rendering::{render, render_non_empty};
 use degen::rust::{render_struct, render_mod, render_impl, render_struct_declaration_only};
-use degen::rust::visitors::{render_node, render_trait_visitor, render_impl_node, ACCEPTS};
+use degen::rust::visitors::{render_node, render_trait_visitor, render_impl_node, ACCEPTS, NodeInfo};
 
 use inflector::Inflector;
 
@@ -110,6 +110,47 @@ fn render_ast_printer(ast_file: &ASTFile) -> String {
     return render_impl("LeveledVisitor", "ASTPrinter", &methods.join("\n\n"), 0);
 }
 
+const EXTRACTOR: &'static str = "
+    pub struct Extractor<'a, T> {
+        pub action: &'a dyn Fn(&mut T) -> (),
+        pub good: bool,
+    }
+
+    impl <'a, T> Extractor<'a, T> {
+        fn new(
+            action: &'a dyn Fn(&mut T) -> ()
+        ) -> Extractor<'a, T> {
+            Extractor {
+                action: action,
+                good: false,
+            }
+        }
+    }
+";
+
+fn render_extractor_struct_and_impl() -> String {
+    return render(EXTRACTOR, 0, &[]);
+}
+
+const CONCRETE_EXTRACTOR: &'static str = "
+    impl <'a> SimpleVisitor for Extractor<'a, $$> {
+    $$
+    }
+";
+
+const EXTRACTION_CALL: &'static str = "
+    (self.action)(it);
+    self.good = true;
+";
+
+fn render_extractor_for(node: &NodeInfo) -> String {
+    let snake = node.name.to_snake_case();
+    let node_name = "nodes::".to_owned() + &node.name;
+    let contents = render(EXTRACTION_CALL, 8, &[]);
+    let visit = render(&VISIT_TEMPLATE_WITH_IT, 4, &[&snake, &node_name, "", "", &contents]);
+    return render(CONCRETE_EXTRACTOR, 0, &[&node_name, &visit]);
+}
+
 /// Parses the template as the ast.json file
 /// and renders the corresponding rust source code.
 pub fn ast_to_source(template: Value) -> String {
@@ -132,7 +173,13 @@ pub fn ast_to_source(template: Value) -> String {
     }
 
     pieces.push(render_struct_declaration_only("ASTPrinter", 0));
-
     pieces.push(render_ast_printer(&ast_file));
+    pieces.push(render_extractor_struct_and_impl());
+
+    for it in &ast_file.nodes {
+        let extractor = render_extractor_for(&it);
+        pieces.push(extractor);
+    }
+
     return pieces.join("\n\n");
 }

@@ -1,4 +1,5 @@
 pub mod ast_file;
+pub mod grammar_file;
 
 #[cfg(test)]
 mod tests {

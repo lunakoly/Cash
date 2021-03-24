@@ -1,7 +1,10 @@
 {
     "nodes": {
+        "List": {
+            "values": "Vec<Box<dyn Node>>"
+        },
         "Leaf": {
-            "value": "Box<dyn Value>"
+            "value": "Token"
         },
         "Command": {
             "arguments": "Vec<Box<dyn Node>>"
@@ -23,11 +26,6 @@
         }
     },
     "visitors": {
-        "SimpleVisitor": {
-            "accepts": "",
-            "returns": "",
-            "default": ""
-        },
         "I32Visitor": {
             "accepts": "i32",
             "returns": "i32",

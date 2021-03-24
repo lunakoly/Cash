@@ -1,65 +1,75 @@
 {
     "rules": {
-        "leaf": [
-            "#string",
-            "#number",
-            "( @expression )"
-        ],
-        "command": [
-            "@leaf @command",
-            "@leaf"
-        ],
-        "pipeline": [
-            "@command | @pipeline",
-            "@command"
-        ],
-        "unary": [
-            "+ @pipeline",
-            "- @pipeline",
-            "not @pipeline",
-            "@pipeline"
-        ],
-        "power": [
-            "@unary ** @power",
-            "@unary"
-        ],
-        "times": [
-            "@power * @times",
-            "@power / @times",
-            "@power % @times",
-            "@power"
-        ],
-        "plus": [
-            "@times + @plus",
-            "@times - @plus",
-            "@times"
-        ],
-        "comparison": [
-            "@plus in @comparison",
-            "@plus < @comparison",
-            "@plus > @comparison",
-            "@plus < = @comparison",
-            "@plus > = @comparison",
-            "@plus"
-        ],
-        "equality": [
-            "@comparison = = @equality",
-            "@comparison ! = @equality",
-            "@comparison"
-        ],
-        "high_logic": [
-            "@equality and @high_logic",
-            "@equality nand @high_logic",
-            "@equality"
-        ],
-        "low_logic": [
-            "@high_logic or @low_logic",
-            "@high_logic xor @low_logic",
-            "@high_logic xnor @low_logic",
-            "@high_logic"
-        ],
-        "expression": [
-            "@low_logic"
-        ]
+        "strings": {
+            "@strings , #string": "handle_strings_append",
+            "#string": "handle_strings_create"
+        },
+        "leaf": {
+            "#string": "handle_leaf_single",
+            "#number": "handle_leaf_single",
+            "( @expression )": "handle_leaf_substitution",
+            "{ @expressions }": "handle_leaf_closure_independent",
+            "{ @strings - > @expressions }": "handle_leaf_closure_dependent"
+        },
+        "command": {
+            "@command @leaf": "handle_command_append",
+            "@leaf": "handle_command_create"
+        },
+        "pipeline": {
+            "@pipeline | @command": "handle_pipeline_append",
+            "@command": "handle_pipeline_create"
+        },
+        "unary": {
+            "+ @pipeline": "handle_unary",
+            "- @pipeline": "handle_unary",
+            "not @pipeline": "handle_unary",
+            "@pipeline": "handle_pass"
+        },
+        "power": {
+            "@unary ** @power": "handle_binary",
+            "@unary": "handle_pass"
+        },
+        "times": {
+            "@times * @power": "handle_binary",
+            "@times / @power": "handle_binary",
+            "@times % @power": "handle_binary",
+            "@power": "handle_pass"
+        },
+        "plus": {
+            "@plus + @times": "handle_binary",
+            "@plus - @times": "handle_binary",
+            "@times": "handle_pass"
+        },
+        "comparison": {
+            "@comparison in @plus": "handle_binary",
+            "@comparison < @plus": "handle_binary",
+            "@comparison > @plus": "handle_binary",
+            "@comparison < = @plus": "handle_binary",
+            "@comparison > = @plus": "handle_binary",
+            "@plus": "handle_pass"
+        },
+        "equality": {
+            "@equality = = @comparison": "handle_binary",
+            "@equality ! = @comparison": "handle_binary",
+            "@comparison": "handle_pass"
+        },
+        "high_logic": {
+            "@high_logic and @equality": "handle_binary",
+            "@high_logic nand @equality": "handle_binary",
+            "@equality": "handle_pass"
+        },
+        "low_logic": {
+            "@low_logic or @high_logic": "handle_binary",
+            "@low_logic xor @high_logic": "handle_binary",
+            "@low_logic xnor @high_logic": "handle_binary",
+            "@high_logic": "handle_pass"
+        },
+        "expression": {
+            "@low_logic": "handle_pass"
+        },
+        "expressions": {
+            "@expressions #newline @expression": "handle_expressions_append",
+            "@expression": "handle_expressions_create"
+        }
     }
 }
