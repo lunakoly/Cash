@@ -19,6 +19,10 @@ fn main() {
     let mut parser = Parser::new(&mut tokenizer);
 
     loop {
+        if !parser.has_next() {
+            break;
+        }
+
         let wrapped = parser.grab();
         let mut ast = wrapped.borrow_mut();
 
@@ -31,4 +35,6 @@ fn main() {
         let mut writer = BufWriter::new(stdout.lock());
         say(message.as_bytes(), width, &mut writer).unwrap();
     }
+
+    println!("BYE");
 }

@@ -211,6 +211,23 @@ pub struct Parser<'a> {
 impl <'a> Parser<'a> {
     fn parse(&mut self) {
         let tokens = self.backend.grab();
+
+        match tokens.first() {
+            Some(Token::End) => {
+                self.last_ast = Rc::new(
+                    RefCell::new(
+                        Expressions {
+                            values: vec![]
+                        }
+                    )
+                );
+
+                self.should_read = false;
+                return;
+            },
+            _ => {},
+        }
+
         let (ast, _) = apply_rule(
             &self.rules,
             "expression",
