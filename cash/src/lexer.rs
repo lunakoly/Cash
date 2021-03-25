@@ -30,9 +30,9 @@ pub enum Token {
 /// Operators are symbols that get clued
 /// to the strings if there's no whitespace
 /// between them
-pub const OPERATORS: &'static str = ":=+-*%$#@!&^|/.~[]{}<>;,";
+pub const OPERATORS: &'static str = ":=+-*%#!&^|/.~[]{}<>;,";
 /// Delimiters never clue to strings
-pub const DELIMITERS: &'static str = "()";
+pub const DELIMITERS: &'static str = "()$@";
 
 fn is_whitespace(symbol: char) -> bool {
     return " \t".contains(symbol);

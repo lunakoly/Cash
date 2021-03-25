@@ -23,6 +23,8 @@
             "+ @pipeline": "handle_unary",
             "- @pipeline": "handle_unary",
             "not @pipeline": "handle_unary",
+            "$ @pipeline": "handle_unary",
+            "@ @pipeline": "handle_unary",
             "@pipeline": "handle_pass"
         },
         "power": {

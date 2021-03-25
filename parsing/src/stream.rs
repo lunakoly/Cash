@@ -4,6 +4,7 @@ pub mod accumulator_stream;
 pub mod analyzable_stream;
 pub mod stdin_stream;
 pub mod burst_stream;
+pub mod wrapper_stream;
 
 /// A sequence of some values of
 /// type T.

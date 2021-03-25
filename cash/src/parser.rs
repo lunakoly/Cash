@@ -54,7 +54,7 @@ fn apply_item(
         return (None, token_index);
     }
 
-    if item.starts_with("@") {
+    if item.len() > 1 && item.starts_with("@") {
         let rule_name = item.chars().skip(1).collect::<String>();
         return apply_rule(rules, &rule_name, tokens, token_index);
     }
