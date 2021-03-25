@@ -39,10 +39,22 @@ impl <'a> SimpleAnalyzableStream<'a> {
 }
 
 impl <'a> Stream<Option<char>> for SimpleAnalyzableStream<'a> {
-    fn get_end_value(&self) -> Option<char> {
-        return self.delegate.get_end_value();
+    fn has_next(&self) -> bool {
+        return self.delegate.has_next();
     }
 
+    fn get_offset(&self) -> usize {
+        return self.delegate.get_offset();
+    }
+
+    fn grab(&mut self) -> Option<char> {
+        let it = self.peek();
+        self.step();
+        return it;
+    }
+}
+
+impl <'a> PeekableStream<Option<char>> for SimpleAnalyzableStream<'a> {
     fn peek(&mut self) -> Option<char> {
         return self.delegate.peek();
     }
@@ -51,10 +63,6 @@ impl <'a> Stream<Option<char>> for SimpleAnalyzableStream<'a> {
         let it = self.peek().unwrap();
         self.accumulator.push(it);
         self.delegate.step();
-    }
-
-    fn get_offset(&self) -> usize {
-        return self.delegate.get_offset();
     }
 }
 

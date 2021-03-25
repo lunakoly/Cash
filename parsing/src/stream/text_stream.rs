@@ -37,20 +37,26 @@ impl <'a> SimpleTextStream<'a> {
 }
 
 impl <'a> Stream<Option<char>> for SimpleTextStream<'a> {
-    fn get_end_value(&self) -> Option<char> {
-        return self.delegate.get_end_value();
+    fn has_next(&self) -> bool {
+        return self.delegate.has_next();
     }
 
+    fn get_offset(&self) -> usize {
+        return self.delegate.get_offset();
+    }
+
+    fn grab(&mut self) -> Option<char> {
+        return self.delegate.grab();
+    }
+}
+
+impl <'a> PeekableStream<Option<char>> for SimpleTextStream<'a> {
     fn peek(&mut self) -> Option<char> {
         return self.delegate.peek();
     }
 
     fn step(&mut self) {
         self.delegate.step();
-    }
-
-    fn get_offset(&self) -> usize {
-        return self.delegate.get_offset();
     }
 }
 

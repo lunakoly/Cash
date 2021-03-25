@@ -247,37 +247,39 @@ fn transform_tight_strings(
 
 pub struct Liner<'a> {
     pub backend: &'a mut (dyn Stream<Token> + 'a),
-    pub line: Vec<Token>,
-    pub should_read: bool,
+    pub end_token_met: bool,
     pub line_number: usize,
 }
 
 impl <'a> Liner<'a> {
-    fn read_line(&mut self) {
-        self.line.clear();
+    fn read_line(&mut self) -> Vec<Token> {
+        let mut line = vec![];
 
         loop {
             let next = self.backend.grab();
-            self.line.push(next.clone());
+            line.push(next.clone());
 
             match next {
                 Token::Newline => break,
-                Token::End => break,
+                Token::End => {
+                    self.end_token_met = true;
+                    break;
+                },
                 _ => {},
             }
         }
 
         println!("Initial Tokens:");
-        for it in &self.line {
+        for it in &line {
             println!("    {:?}", it);
         }
         println!("");
 
-        self.line = transform(&self.line, &transform_duplicate_whitespaces);
-        self.line = transform(&self.line, &transform_numbers);
-        self.line = transform(&self.line, &transform_tight_strings);
+        line = transform(&line, &transform_duplicate_whitespaces);
+        line = transform(&line, &transform_numbers);
+        line = transform(&line, &transform_tight_strings);
 
-        self.line = self.line.iter()
+        line = line.iter()
             .filter(|&it| match it {
                 Token::Whitespace { value: _ } => false,
                 _ => true,
@@ -285,8 +287,7 @@ impl <'a> Liner<'a> {
             .cloned()
             .collect();
 
-        self.line_number += 1;
-        self.should_read = false;
+        return line;
     }
 
     pub fn new(
@@ -294,32 +295,20 @@ impl <'a> Liner<'a> {
     ) -> Liner<'a> {
         return Liner::<'a> {
             backend: backend,
-            line: vec![],
-            line_number: 1,
-            should_read: true
+            end_token_met: false,
+            line_number: 0,
         };
     }
 }
 
 impl <'a> Stream<Vec<Token>> for Liner<'a> {
-    fn get_end_value(&self) -> Vec<Token> {
-        return vec![];
+    fn has_next(&self) -> bool {
+        return !self.end_token_met;
     }
 
-    fn peek(&mut self) -> Vec<Token> {
-        if self.should_read {
-            self.read_line();
-        }
-
-        return self.line.clone();
-    }
-
-    fn step(&mut self) {
-        if self.should_read {
-            self.read_line();
-        }
-
-        self.should_read = true;
+    fn grab(&mut self) -> Vec<Token> {
+        self.line_number += 1;
+        return self.read_line();
     }
 
     fn get_offset(&self) -> usize {

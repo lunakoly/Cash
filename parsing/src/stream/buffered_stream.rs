@@ -2,7 +2,7 @@ use crate::stream::*;
 
 /// Stream with lookaheads. Reads
 /// a bunch of extra values beforehand.
-pub trait BufferedStream<T : Eq> : Stream<T> {
+pub trait BufferedStream<T : Eq> : PeekableStream<T> {
     /// Allows to look at the specified
     /// position in the buffer.
     fn lookahead(&self, position: usize) -> T;
@@ -29,6 +29,11 @@ pub struct SimpleBufferedStream<'a, T : Eq + Copy> {
     /// will be updated after the next step.
     /// fill_index should cycle over the buffer.
     pub fill_index: usize,
+    /// Points to the first position
+    /// where the backend could't give us
+    /// any meaningful data, because
+    /// it was !has_next() there.
+    pub steps_left: Option<usize>,
     /// Internal storage for collecting
     /// lookahead values.
     pub buffer: Vec<T>,
@@ -47,12 +52,12 @@ impl<'a, T : Eq + Copy> SimpleBufferedStream<'a, T> {
             backend: backend,
             peek_index: buffer_indent,
             fill_index: 0,
+            steps_left: None,
             buffer: vec![default.clone(); buffer_size]
         };
 
         for it in that.peek_index..that.buffer_size {
-            that.buffer[it] = that.backend.peek();
-            that.backend.step();
+            that.buffer[it] = that.backend.grab();
         }
 
         return that;
@@ -60,21 +65,36 @@ impl<'a, T : Eq + Copy> SimpleBufferedStream<'a, T> {
 }
 
 impl<'a, T : Eq + Copy> Stream<T> for SimpleBufferedStream<'a, T> {
-    fn get_end_value(&self) -> T {
-        return self.backend.get_end_value();
+    fn has_next(&self) -> bool {
+        return self.steps_left != Some(0);
     }
 
+    fn get_offset(&self) -> usize {
+        return self.backend.get_offset() + self.buffer_indent - self.buffer_size;
+    }
+
+    fn grab(&mut self) -> T {
+        let it = self.peek();
+        self.step();
+        return it;
+    }
+}
+
+impl<'a, T : Eq + Copy> PeekableStream<T> for SimpleBufferedStream<'a, T> {
     fn peek(&mut self) -> T {
         return self.buffer[self.peek_index].clone();
     }
 
-    fn has_next(&mut self) -> bool {
-        return self.buffer[self.peek_index] != self.get_end_value();
-    }
-
     fn step(&mut self) {
-        self.buffer[self.fill_index] = self.backend.peek();
-        self.backend.step();
+        if self.backend.has_next() {
+            self.buffer[self.fill_index] = self.backend.grab();
+        } else if let Some(steps_left) = self.steps_left {
+            if steps_left > 0 {
+                self.steps_left = Some(steps_left - 1);
+            }
+        } else {
+            self.steps_left = Some(self.buffer_size - 2 - self.buffer_indent);
+        }
 
         if self.peek_index != self.buffer_size - 1 {
             self.peek_index += 1;
@@ -87,10 +107,6 @@ impl<'a, T : Eq + Copy> Stream<T> for SimpleBufferedStream<'a, T> {
         } else {
             self.fill_index = 0;
         }
-    }
-
-    fn get_offset(&self) -> usize {
-        return self.backend.get_offset() + self.buffer_indent - self.buffer_size;
     }
 }
 

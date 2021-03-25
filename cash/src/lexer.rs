@@ -85,22 +85,18 @@ pub struct Lexer<'a> {
     /// Number of the character
     /// the last token starts with.
     pub last_token_offset: usize,
-    /// If true, peek() will read one
-    /// more token. Otherwise, peek() will
-    /// return `last_token`.
-    pub should_read: bool,
 }
 
 impl <'a> Lexer<'a> {
-    fn read_escape(&mut self) {
+    fn read_escape(&mut self) -> Token {
         if self.backend.accept('\n') {
-            self.last_token = Token::Newline;
+            Token::Newline
         } else {
-            self.read_item();
+            self.read_item()
         }
     }
 
-    fn read_whitespace(&mut self) {
+    fn read_whitespace(&mut self) -> Token {
         while let Some(symbol) = self.backend.peek() {
             if is_whitespace(symbol) {
                 self.backend.step();
@@ -109,12 +105,12 @@ impl <'a> Lexer<'a> {
             }
         }
 
-        self.last_token = Token::Whitespace {
+        return Token::Whitespace {
             value: self.backend.revise_all()
         };
     }
 
-    fn read_binary(&mut self) {
+    fn read_binary(&mut self) -> Token {
         while let Some(symbol) = self.backend.peek() {
             if is_binary(symbol) {
                 self.backend.step();
@@ -123,13 +119,13 @@ impl <'a> Lexer<'a> {
             }
         }
 
-        self.last_token = Token::NumberSegment {
+        return Token::NumberSegment {
             value: self.backend.revise_all(),
             base: 2,
         };
     }
 
-    fn read_octal(&mut self) {
+    fn read_octal(&mut self) -> Token {
         while let Some(symbol) = self.backend.peek() {
             if is_octal(symbol) {
                 self.backend.step();
@@ -138,13 +134,13 @@ impl <'a> Lexer<'a> {
             }
         }
 
-        self.last_token = Token::NumberSegment {
+        return Token::NumberSegment {
             value: self.backend.revise_all(),
             base: 8,
         };
     }
 
-    fn read_decimal(&mut self) {
+    fn read_decimal(&mut self) -> Token {
         while let Some(symbol) = self.backend.peek() {
             if is_decimal(symbol) {
                 self.backend.step();
@@ -153,13 +149,13 @@ impl <'a> Lexer<'a> {
             }
         }
 
-        self.last_token = Token::NumberSegment {
+        return Token::NumberSegment {
             value: self.backend.revise_all(),
             base: 10,
         };
     }
 
-    fn read_hexadecimal(&mut self) {
+    fn read_hexadecimal(&mut self) -> Token {
         while let Some(symbol) = self.backend.peek() {
             if is_decimal(symbol) {
                 self.backend.step();
@@ -168,13 +164,13 @@ impl <'a> Lexer<'a> {
             }
         }
 
-        self.last_token = Token::NumberSegment {
+        return Token::NumberSegment {
             value: self.backend.revise_all(),
             base: 16,
         };
     }
 
-    fn read_implicit_string(&mut self) {
+    fn read_implicit_string(&mut self) -> Token {
         while let Some(symbol) = self.backend.peek() {
             if is_implicit_string_content(symbol) {
                 self.backend.step();
@@ -183,56 +179,67 @@ impl <'a> Lexer<'a> {
             }
         }
 
-        self.last_token = Token::String {
+        return Token::String {
             value: self.backend.revise_all()
         };
     }
 
-    fn read_item(&mut self) {
+    fn read_item(&mut self) -> Token {
+        self.backend.clear();
+
         if self.backend.accept('\\') {
-            self.read_escape();
-        } else if self.backend.accept('\n') {
-            self.last_token = Token::Newline;
-        } else if let Some(symbol) = self.backend.peek() {
+            return self.read_escape();
+        }
+
+        if self.backend.accept('\n') {
+            return Token::Newline;
+        }
+
+        if let Some(symbol) = self.backend.peek() {
             if is_whitespace(symbol) {
                 self.backend.step();
-                self.read_whitespace();
-            } else if is_operator(symbol) {
-                self.backend.step();
-                self.last_token = Token::Operator {
-                    value: String::from(symbol)
-                };
-            } else if is_delimiter(symbol) {
-                self.backend.step();
-                self.last_token = Token::Delimiter {
-                    value: String::from(symbol)
-                };
-            } else if is_binary(symbol) {
-                self.backend.step();
-                self.read_binary();
-            } else if is_octal(symbol) {
-                self.backend.step();
-                self.read_octal();
-            } else if is_decimal(symbol) {
-                self.backend.step();
-                self.read_decimal();
-            } else if is_hexadecimal(symbol) {
-                self.backend.step();
-                self.read_hexadecimal();
-            } else {
-                self.backend.step();
-                self.read_implicit_string();
+                return self.read_whitespace();
             }
-        } else {
-            self.last_token = Token::End;
-        }
-    }
 
-    fn read_token(&mut self) {
-        self.backend.clear();
-        self.last_token_offset = self.backend.get_offset();
-        self.read_item();
-        self.should_read = false;
+            if is_operator(symbol) {
+                self.backend.step();
+                return Token::Operator {
+                    value: String::from(symbol)
+                };
+            }
+
+            if is_delimiter(symbol) {
+                self.backend.step();
+                return Token::Delimiter {
+                    value: String::from(symbol)
+                };
+            }
+
+            if is_binary(symbol) {
+                self.backend.step();
+                return self.read_binary();
+            }
+
+            if is_octal(symbol) {
+                self.backend.step();
+                return self.read_octal();
+            }
+
+            if is_decimal(symbol) {
+                self.backend.step();
+                return self.read_decimal();
+            }
+
+            if is_hexadecimal(symbol) {
+                self.backend.step();
+                return self.read_hexadecimal();
+            }
+
+            self.backend.step();
+            return self.read_implicit_string();
+        }
+
+        return Token::End;
     }
 
     pub fn new(
@@ -242,30 +249,19 @@ impl <'a> Lexer<'a> {
             backend: backend,
             last_token: Token::End,
             last_token_offset: 0,
-            should_read: true
         };
     }
 }
 
 impl <'a> Stream<Token> for Lexer<'a> {
-    fn get_end_value(&self) -> Token {
-        return Token::End;
+    fn has_next(&self) -> bool {
+        return self.last_token != Token::End;
     }
 
-    fn peek(&mut self) -> Token {
-        if self.should_read {
-            self.read_token();
-        }
-
+    fn grab(&mut self) -> Token {
+        self.last_token_offset = self.backend.get_offset();
+        self.last_token = self.read_item();
         return self.last_token.clone();
-    }
-
-    fn step(&mut self) {
-        if self.should_read {
-            self.read_token();
-        }
-
-        self.should_read = true;
     }
 
     fn get_offset(&self) -> usize {

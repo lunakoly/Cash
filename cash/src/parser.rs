@@ -204,26 +204,25 @@ impl Eq for Expressions {}
 pub struct Parser<'a> {
     pub backend: Liner<'a>,
     pub last_ast: Rc<RefCell<Expressions>>,
-    pub should_read: bool,
     pub rules: Vec<Rule<'a>>,
+    pub end_token_met: bool,
 }
 
 impl <'a> Parser<'a> {
-    fn parse(&mut self) {
+    fn parse(&mut self) -> Rc<RefCell<Expressions>> {
         let tokens = self.backend.grab();
 
         match tokens.first() {
             Some(Token::End) => {
-                self.last_ast = Rc::new(
+                self.end_token_met = true;
+
+                return Rc::new(
                     RefCell::new(
                         Expressions {
                             values: vec![]
                         }
                     )
                 );
-
-                self.should_read = false;
-                return;
             },
             _ => {},
         }
@@ -236,32 +235,30 @@ impl <'a> Parser<'a> {
         );
 
         if let Some(thing) = ast {
-            self.last_ast = Rc::new(
+            return Rc::new(
                 RefCell::new(
                     Expressions {
                         values: vec![thing]
                     }
                 )
             );
-        } else {
-            self.last_ast = Rc::new(
-                RefCell::new(
-                    Expressions {
-                        values: vec![
-                            Box::new(
-                                Leaf {
-                                    value: Token::String {
-                                        value: "[error]".to_owned()
-                                    }
-                                }
-                            )
-                        ]
-                    }
-                )
-            );
         }
 
-        self.should_read = false;
+        return Rc::new(
+            RefCell::new(
+                Expressions {
+                    values: vec![
+                        Box::new(
+                            Leaf {
+                                value: Token::String {
+                                    value: "[error]".to_owned()
+                                }
+                            }
+                        )
+                    ]
+                }
+            )
+        );
     }
 
     pub fn new(
@@ -276,37 +273,19 @@ impl <'a> Parser<'a> {
                     }
                 )
             ),
-            should_read: true,
-            rules: get_rules()
+            rules: get_rules(),
+            end_token_met: false
         };
     }
 }
 
 impl <'a> Stream<Rc<RefCell<Expressions>>> for Parser<'a> {
-    fn get_end_value(&self) -> Rc<RefCell<Expressions>> {
-        return Rc::new(
-            RefCell::new(
-                Expressions {
-                    values: vec![]
-                }
-            )
-        );
+    fn has_next(&self) -> bool {
+        return !self.end_token_met;
     }
 
-    fn peek(&mut self) -> Rc<RefCell<Expressions>> {
-        if self.should_read {
-            self.parse();
-        }
-
-        return self.last_ast.clone();
-    }
-
-    fn step(&mut self) {
-        if self.should_read {
-            self.parse();
-        }
-
-        self.should_read = true;
+    fn grab(&mut self) -> Rc<RefCell<Expressions>> {
+        return self.parse();
     }
 
     fn get_offset(&self) -> usize {

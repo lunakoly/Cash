@@ -24,6 +24,12 @@ pub struct SimpleBurstStream<'a> {
     pub maximum_lock_length: usize,
     /// The number of already returned spaces.
     pub current_lock_size: usize,
+    /// If this stream decides it wants
+    /// to peek the value first, the value
+    /// will be saved to the intermediate
+    /// field (because the backend stream
+    /// is not peekable, it may only `grab()`).
+    pub last_peeked: Option<char>,
 }
 
 impl <'a> SimpleBurstStream<'a> {
@@ -36,43 +42,34 @@ impl <'a> SimpleBurstStream<'a> {
             locked: false,
             maximum_lock_length: maximum_lock_length,
             current_lock_size: 0,
+            last_peeked: None,
         }
     }
 }
 
 impl <'a> Stream<Option<char>> for SimpleBurstStream<'a> {
-    fn get_end_value(&self) -> Option<char> {
-        return self.backend.get_end_value();
-    }
-
-    fn peek(&mut self) -> Option<char> {
-        if self.locked {
-            return Some(' ');
-        }
-
-        return self.backend.peek();
-    }
-
-    fn step(&mut self) {
-        if !self.locked {
-            if self.backend.peek() == Some('\n') {
-                self.locked = true;
-            } else {
-                self.backend.step();
-            }
+    fn has_next(&self) -> bool {
+        if let Some(_) = self.last_peeked {
+            true
         } else {
-            self.current_lock_size += 1;
-
-            if self.current_lock_size >= self.maximum_lock_length {
-                self.current_lock_size = 0;
-                self.locked = false;
-                self.backend.step();
-            }
+            self.backend.has_next()
         }
     }
 
     fn get_offset(&self) -> usize {
-        return self.backend.get_offset();
+        if let Some(_) = self.last_peeked {
+            self.backend.get_offset() - 1
+        } else {
+            self.backend.get_offset()
+        }
+    }
+
+    fn grab(&mut self) -> Option<char> {
+        if let Some(peeked) = self.last_peeked {
+            Some(peeked)
+        } else {
+            self.backend.grab()
+        }
     }
 }
 

@@ -58,17 +58,29 @@ impl <T: BufRead> WrapperStream<T> {
 }
 
 impl <T: BufRead> Stream<Option<char>> for WrapperStream<T> {
-    fn get_end_value(&self) -> Option<char> {
-        return None;
+    fn has_next(&self) -> bool {
+        return self.next >= self.buffer.len();
     }
 
+    fn get_offset(&self) -> usize {
+        return self.next + self.offset;
+    }
+
+    fn grab(&mut self) -> Option<char> {
+        let it = self.peek();
+        self.step();
+        return it;
+    }
+}
+
+impl <T: BufRead> PeekableStream<Option<char>> for WrapperStream<T> {
     fn peek(&mut self) -> Option<char> {
         if self.should_read {
             self.read_next_line();
         }
 
         if self.next >= self.buffer.len() {
-            return self.get_end_value();
+            return None;
         }
 
         return Some(self.buffer[self.next]);
@@ -84,10 +96,6 @@ impl <T: BufRead> Stream<Option<char>> for WrapperStream<T> {
         } else {
             self.next += 1;
         }
-    }
-
-    fn get_offset(&self) -> usize {
-        return self.next + self.offset;
     }
 }
 
