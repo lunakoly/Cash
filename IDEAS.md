@@ -158,7 +158,7 @@ if (name?) {
 }
 ```
 
-* Closures may be called with implicit arguments or explicit ones, and the later ones are declared as follows:
+* Closures may be called with implicit arguments or explicit ones, and the latter ones are declared as follows:
 
 ```
 greet = { name ->
@@ -239,7 +239,7 @@ Should `a` be deleted as soon as the `doSomething`'s scope was left? Should it n
 
 - ⚠️ Comparison operators vs redirects
 
-It's unclear, what `<`/`>`/... should mean. 
+It's unclear, what `<`/`>`/... should mean.
 
 ```
 if (getAgeOf Nick > 20) {
@@ -247,7 +247,7 @@ if (getAgeOf Nick > 20) {
 }
 ```
 
-Should `> 20` mean a redirection to the 20th descriptor or we should wait until the left command returns it's value, and analyze it then? Or maybe something else? 
+Should `> 20` mean a redirection to the 20th descriptor or we should wait until the left command returns it's value, and analyze it then? Or maybe something else?
 
 ### Replacing `?` with the more general _big money_ operator `$`
 
@@ -315,7 +315,7 @@ Should `a` be deleted as soon as the `doSomething`'s scope was left? Should it n
 
 - ⚠️ Comparison operators vs redirects
 
-It's unclear, what `<`/`>`/... should mean. 
+It's unclear, what `<`/`>`/... should mean.
 
 ```
 if (getAgeOf Nick > 20) {

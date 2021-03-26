@@ -6,27 +6,27 @@ use serde_json::Value;
 
 use degen::rendering::{render};
 
-const STRUCT_RULE_TEMPLATE: &'static str = "
-    #[derive(Clone)]
-    pub struct Branch<'a> {
-        pub pattern: Vec<&'static str>,
-        pub handler: &'a dyn Fn(Vec<Box<dyn crate::ast::Node>>) -> Box<dyn crate::ast::Node>
-    }
+// const STRUCT_RULE_TEMPLATE: &'static str = "
+//     #[derive(Clone)]
+//     pub struct Branch<'a> {
+//         pub pattern: Vec<&'static str>,
+//         pub handler: &'a dyn Fn(Vec<Box<dyn crate::ast::Node>>) -> Box<dyn crate::ast::Node>
+//     }
 
-    #[derive(Clone)]
-    pub struct Rule<'a> {
-        pub name: &'static str,
-        pub simple_branches: Vec<Branch<'a>>,
-        pub recursive_branches: Vec<Branch<'a>>,
-    }
-";
+//     #[derive(Clone)]
+//     pub struct Rule<'a> {
+//         pub name: &'static str,
+//         pub simple_branches: Vec<Branch<'a>>,
+//         pub recursive_branches: Vec<Branch<'a>>,
+//     }
+// ";
 
-fn render_struct_rule() -> String {
-    return render(STRUCT_RULE_TEMPLATE, 0, &[]);
-}
+// fn render_struct_rule() -> String {
+//     return render(STRUCT_RULE_TEMPLATE, 0, &[]);
+// }
 
 const BRANCH_TEMPLATE: &'static str = "
-    Branch {
+    parsing::ruler::Branch {
         pattern: vec![$$],
         handler: &$$
     }
@@ -42,7 +42,7 @@ fn render_branch(branch: &Branch, indent: usize) -> String {
 }
 
 const RULE_TEMPLATE: &'static str = "
-    Rule {
+    parsing::ruler::Rule {
         name: $$,
         simple_branches: vec![
     $$
@@ -78,21 +78,24 @@ fn render_rule(rule: &Rule, indent: usize) -> String {
 }
 
 const ALL_RULES_TEMPLATE: &'static str = "
-    pub fn get_rules<'a>() -> Vec<Rule<'a>> {
-        return vec![
+    pub fn get_grammar<'a>() -> parsing::ruler::Grammar<'a, Box<dyn crate::ast::Node>, crate::lexer::Token> {
+        return parsing::ruler::Grammar {
+            handle_token: &$$,
+            rules: vec![
     $$
-        ];
+            ],
+        };
     }
 ";
 
-fn render_all_rules(grammar_file: &GrammarFile) -> String {
+fn render_get_grammar(grammar_file: &GrammarFile) -> String {
     let mut rules = vec![];
 
     for it in &grammar_file.rules {
-        rules.push(render_rule(it, 8));
+        rules.push(render_rule(it, 12));
     }
 
-    return render(ALL_RULES_TEMPLATE, 0, &[&rules.join(",\n")]);
+    return render(ALL_RULES_TEMPLATE, 0, &[&grammar_file.handle_token, &rules.join(",\n")]);
 }
 
 /// Parses the template as the grammar.json file
@@ -102,8 +105,8 @@ pub fn ast_to_source(template: Value) -> String {
 
     let pieces = vec![
         "// THIS CODE IS AUTO-GENERATED".to_owned(),
-        render_struct_rule(),
-        render_all_rules(&grammar_file)
+        // render_struct_rule(),
+        render_get_grammar(&grammar_file)
     ];
 
     return pieces.join("\n\n");

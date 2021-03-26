@@ -1,4 +1,5 @@
 {
+    "handle_token": "handle_token",
     "rules": {
         "strings": {
             "@strings , #string": "handle_strings_append",

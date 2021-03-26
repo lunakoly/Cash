@@ -11,6 +11,7 @@ pub struct Rule {
 }
 
 pub struct GrammarFile {
+    pub handle_token: String,
     pub rules: Vec<Rule>,
 }
 
@@ -46,6 +47,7 @@ fn parse_rules(rules_json: &Value) -> Vec<Rule> {
 
 pub fn parse_ast(template: Value) -> GrammarFile {
     GrammarFile {
+        handle_token: template["handle_token"].as_str().unwrap().to_owned(),
         rules: parse_rules(&template["rules"]),
     }
 }

@@ -15,6 +15,14 @@ fn create_todo(location: &str) -> Box<dyn Node> {
     )
 }
 
+fn handle_token(token: &Token) -> Box<dyn Node> {
+    Box::new(
+        Leaf {
+            value: token.clone()
+        }
+    )
+}
+
 fn handle_pass(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if !pattern.is_empty() {
         pattern.remove(0)

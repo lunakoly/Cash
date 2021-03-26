@@ -1,6 +1,8 @@
 use parsing::stream::*;
 use parsing::stream::accumulator_stream::*;
 
+use parsing::ruler::{RepresentableToken};
+
 #[derive(Clone, PartialEq, Debug, Eq)]
 pub enum Token {
     Operator {
@@ -25,6 +27,31 @@ pub enum Token {
     },
     Newline,
     End,
+}
+
+impl RepresentableToken for Token {
+    fn get_type_name(&self) -> String {
+        match self {
+            Token::Operator { .. } => "operator",
+            Token::Delimiter { .. } => "delimiter",
+            Token::Number { .. } => "number",
+            Token::String { .. } => "string",
+            Token::Whitespace { .. } => "whitespace",
+            Token::Newline { .. } => "newline",
+            Token::End { .. } => "end",
+            _ => "",
+        }.to_owned()
+    }
+
+    fn get_value(&self) -> Option<&str> {
+        match self {
+            Token::Operator { value } => Some(value),
+            Token::Delimiter { value } => Some(value),
+            Token::Number { value, .. } => Some(value),
+            Token::String { value } => Some(value),
+            _ => None,
+        }
+    }
 }
 
 /// Operators are symbols that get clued
