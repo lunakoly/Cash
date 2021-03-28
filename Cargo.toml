@@ -10,6 +10,7 @@ edition = "2018"
 ferris-says = "0.1"
 cash = { path = "cash", version = "*" }
 parsing = { path = "parsing", version = "*" }
+processing = { path = "processing", version = "*" }
 
 [build-dependencies]
 building = { path = "building", version = "*" }

@@ -1,6 +1,7 @@
 use ferris_says::say;
 
 use std::io::{stdout, BufWriter};
+use std::io::{stdin};
 
 use parsing::stream::{Stream};
 use parsing::stream::stdin_stream::{StdinStream};
@@ -10,7 +11,31 @@ use cash::ast::*;
 use cash::lexer::{Lexer};
 use cash::parser::{Parser};
 
+use processing::{launch_command, launch_pipeline, launch_input_substitution, launch_output_substitution};
+
+fn test_processing() -> std::io::Result<()> {
+    println!("Testing Processing:");
+
+    // let result = launch_command(&["E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\test.bat"])?
+    //     .wait_with_output()?;
+
+    let result = launch_pipeline(
+        None,
+        Some(std::process::Stdio::piped()),
+        &[
+            &["E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\test.bat"],
+        ]
+    )?
+        .wait_with_output()?;
+
+    let output = String::from_utf8_lossy(&result.stdout);
+    println!("Got: {:?}", &output);
+    Ok(())
+}
+
 fn main() {
+    test_processing().unwrap();
+
     println!("Starting: ");
 
     let mut user_input = StdinStream::new();
