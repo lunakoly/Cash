@@ -1,0 +1,7 @@
+// Copyright (C) 2021 luna_koly
+//
+// This file contains parameters defined via
+// cmake so that we could access them later.
+
+#define VERSION_MAJOR @Terminals_VERSION_MAJOR@
+#define VERSION_MINOR @Terminals_VERSION_MINOR@

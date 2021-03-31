@@ -214,6 +214,10 @@ impl <'a> Lexer<'a> {
     fn read_item(&mut self) -> Token {
         self.backend.clear();
 
+        if !self.backend.has_next() {
+            return Token::End;
+        }
+
         if self.backend.accept('\\') {
             return self.read_escape();
         }
@@ -274,7 +278,7 @@ impl <'a> Lexer<'a> {
     ) -> Lexer<'a> {
         return Lexer::<'a> {
             backend: backend,
-            last_token: Token::End,
+            last_token: Token::Newline,
             last_token_offset: 0,
         };
     }

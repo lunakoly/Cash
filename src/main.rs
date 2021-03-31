@@ -11,7 +11,9 @@ use cash::ast::*;
 use cash::lexer::{Lexer};
 use cash::parser::{Parser};
 
-use processing::{launch_command, launch_pipeline, launch_input_substitution, launch_output_substitution};
+use processing::{launch_pipeline, launch_input_substitution, launch_output_substitution};
+
+use terminals::terminal_stream::TerminalStream;
 
 fn test_processing() -> std::io::Result<()> {
     println!("Testing Processing:");
@@ -38,7 +40,9 @@ fn main() {
 
     println!("Starting: ");
 
-    let mut user_input = StdinStream::new();
+    // let mut user_input = StdinStream::new();
+    let mut user_input = TerminalStream::new();
+
     let mut accumulator_stream = SimpleAccumulatorStream::new(&mut user_input);
     let mut tokenizer = Lexer::new(&mut accumulator_stream);
     let mut parser = Parser::new(&mut tokenizer);

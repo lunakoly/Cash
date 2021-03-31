@@ -11,6 +11,7 @@ ferris-says = "0.1"
 cash = { path = "cash", version = "*" }
 parsing = { path = "parsing", version = "*" }
 processing = { path = "processing", version = "*" }
+terminals = { path = "terminals", version = "*" }
 
 [build-dependencies]
 building = { path = "building", version = "*" }
