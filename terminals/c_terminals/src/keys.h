@@ -24,11 +24,14 @@
     #define RAW_KEY_DOWN 'B'
     #define RAW_KEY_RIGHT 'C'
     #define RAW_KEY_LEFT 'D'
+    #define RAW_KEY_SIGINT 3 // Ctrl-C
+    #define RAW_KEY_SIGSTOP 26 // Ctrl-Z
+    #define RAW_KEY_EOF 4 // Ctrl-D
 #endif
 // 27 = '\x1b' = '\033'
 #define RAW_KEY_ESCAPE 27
 #define RAW_KEY_TAB 9
-
+// inserted at the end of the user input
 #define RAW_KEY_NEWLINE 13
 
 // terminals 'normalize' their input

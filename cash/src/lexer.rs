@@ -115,14 +115,6 @@ pub struct Lexer<'a> {
 }
 
 impl <'a> Lexer<'a> {
-    fn read_escape(&mut self) -> Token {
-        if self.backend.accept('\n') {
-            Token::Newline
-        } else {
-            self.read_item()
-        }
-    }
-
     fn read_whitespace(&mut self) -> Token {
         while let Some(symbol) = self.backend.peek() {
             if is_whitespace(symbol) {
@@ -201,6 +193,9 @@ impl <'a> Lexer<'a> {
         while let Some(symbol) = self.backend.peek() {
             if is_implicit_string_content(symbol) {
                 self.backend.step();
+            } else if symbol == '\\' {
+                self.backend.step();
+                self.backend.step();
             } else {
                 break;
             }
@@ -219,7 +214,7 @@ impl <'a> Lexer<'a> {
         }
 
         if self.backend.accept('\\') {
-            return self.read_escape();
+            return self.read_implicit_string();
         }
 
         if self.backend.accept('\n') {

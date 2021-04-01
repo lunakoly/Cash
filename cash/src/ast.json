@@ -47,6 +47,11 @@
             "accepts": "String",
             "returns": "",
             "default": ""
+        },
+        "RunnerVisitor": {
+            "accepts": "",
+            "returns": "Box<dyn crate::value::Value>",
+            "default": ""
         }
     }
 }

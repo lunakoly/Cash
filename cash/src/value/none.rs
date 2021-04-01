@@ -1,43 +1,29 @@
 use crate::value::*;
 
-use crate::value::string::{StringValue};
-
 #[derive(Clone, Debug)]
-pub struct NumberValue {
-    value: i32,
-}
+pub struct NoneValue {}
 
-impl NumberValue {
-    pub fn new(value: i32) -> NumberValue {
-        NumberValue {
-            value: value,
-        }
+impl NoneValue {
+    pub fn new() -> NoneValue {
+        NoneValue {}
     }
 
     fn todo_binary(&self, other: Box<dyn Value>) -> Box<dyn Value> {
-        return Box::new(
-            StringValue::new(
-                &(self.to_string() + &other.to_string())
-            )
-        );
+        Box::new(NoneValue::new())
     }
 }
 
-impl Value for NumberValue {
+impl Value for NoneValue {
     fn as_any(&self) -> &dyn Any {
         self
     }
 
     fn to_string(&self) -> String {
-        return self.value.to_string();
+        return "None".to_owned()
     }
 
     fn get(&self, subscripts: &[Box<dyn Value>]) -> Box<dyn Value> {
-        return Box::new(
-            StringValue::new(
-                &subscripts.iter().map(|it| it.to_string()).collect::<Vec<String>>().join("::"),
-            )
-        );
+        Box::new(NoneValue::new())
     }
 
     fn set(&self, _subscripts: &[Box<dyn Value>], _value: Box<dyn Value>) {
@@ -83,16 +69,15 @@ impl Value for NumberValue {
         self.todo_binary(other)
     }
 
-    fn contains(&self, _other: Box<dyn Value>) -> bool {
-        return false;
+    fn contains(&self, other: Box<dyn Value>) -> bool {
+        return false
     }
 
     fn equals(&self, other: Box<dyn Value>) -> bool {
-        return self.to_string() == other.to_string();
+        return false
     }
 
-    fn compare(&self, _other: Box<dyn Value>) -> i8 {
-        // TODO
-        return 0;
+    fn compare(&self, other: Box<dyn Value>) -> i8 {
+        0
     }
 }

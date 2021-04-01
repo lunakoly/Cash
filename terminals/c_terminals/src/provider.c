@@ -1,11 +1,18 @@
+// Copyright (C) 2021 luna_koly
+
+// for free()
 #include <stdlib.h>
+// for debugging :)
+#include <stdio.h>
 
 #include "provider.h"
 
+/**
+ * The current global terminal instance.
+ */
 static struct Terminal current_terminal = {
     .features = NULL,
     .error = NULL,
-    .eof_found = 0,
     .is_ok = NULL,
     .get_size = NULL,
     .get_columns = NULL,
@@ -23,6 +30,11 @@ static struct Terminal current_terminal = {
     .to_normal_mode = NULL
 };
 
+/**
+ * Returns true if we managed
+ * to acquire some sort of a
+ * terminal.
+ */
 static bool is_terminal_initialized() {
     return current_terminal.features != NULL;
 }
@@ -32,7 +44,7 @@ bool terminal_has_next() {
         current_terminal = create_vt100_terminal();
     }
 
-    return is_terminal_initialized() && !current_terminal.eof_found;
+    return is_terminal_initialized() && !feof(stdin);
 }
 
 char * terminal_read_line() {

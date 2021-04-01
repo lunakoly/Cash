@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use degen::rendering::{render, render_non_empty};
 use degen::rust::{render_struct, render_mod, render_impl, render_struct_declaration_only};
-use degen::rust::visitors::{render_node, render_trait_visitor, render_impl_node, ACCEPTS, NodeInfo};
+use degen::rust::visitors::{render_node, render_trait_visitor, render_trait_visitor_no_body, render_impl_node, ACCEPTS, NodeInfo};
 
 use inflector::Inflector;
 
@@ -174,8 +174,13 @@ pub fn ast_to_source(template: Value) -> String {
     }
 
     for it in &ast_file.visitors {
-        let visitor = render_trait_visitor(&it, &ast_file.nodes);
-        pieces.push(visitor);
+        if it.returns.is_empty() || !it.default.is_empty() {
+            let visitor = render_trait_visitor(&it, &ast_file.nodes);
+            pieces.push(visitor);
+        }
+
+        let visitor_no_body = render_trait_visitor_no_body(&it, &ast_file.nodes);
+        pieces.push(visitor_no_body);
     }
 
     pieces.push(render_struct_declaration_only("ASTPrinter", 0));

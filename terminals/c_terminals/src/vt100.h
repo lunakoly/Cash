@@ -1,9 +1,7 @@
 // Copyright (C) 2021 luna_koly
 //
-// See Microsoft docs for _getch() and ENABLE_VIRTUAL_TERMINAL_PROCESSING
-// for more information about conio library and VT100 support.
-// https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
-// https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/getch-getwch?view=vs-2019
+// Defines Terminal functions implmentations
+// for a terminal based on VT100 sequences.
 
 #pragma once
 

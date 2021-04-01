@@ -8,13 +8,13 @@ pub fn launch_command(arguments: &[&str]) -> std::io::Result<Child> {
         .spawn()
 }
 
-pub fn launch_pipeline<T: Into<Stdio>>(
+pub fn launch_pipeline<T: Into<Stdio>, K: Into<Stdio>>(
     input: Option<T>,
-    output: Option<T>,
-    arguments: &[&[&str]]
+    output: Option<K>,
+    arguments: &Vec<Vec<String>>
 ) -> std::io::Result<Child> {
     if arguments.len() == 1 {
-        let mut command = Command::new(arguments[0][0]);
+        let mut command = Command::new(&arguments[0][0]);
         command.args(&arguments[0][1..]);
 
         if let Some(pipe) = input {
@@ -28,7 +28,7 @@ pub fn launch_pipeline<T: Into<Stdio>>(
         return command.spawn();
     }
 
-    let mut first_command = Command::new(arguments[0][0]);
+    let mut first_command = Command::new(&arguments[0][0]);
     first_command.args(&arguments[0][1..]);
     first_command.stdout(Stdio::piped());
 
@@ -40,7 +40,7 @@ pub fn launch_pipeline<T: Into<Stdio>>(
 
     for it in 1..arguments.len() - 1 {
         if let Some(last_child_output) = last_child.stdout {
-            last_child = Command::new(arguments[it][0])
+            last_child = Command::new(&arguments[it][0])
                 .args(&arguments[it][1..])
                 .stdin(last_child_output)
                 .stdout(Stdio::piped())
@@ -51,7 +51,7 @@ pub fn launch_pipeline<T: Into<Stdio>>(
     }
 
     if let Some(last_child_output) = last_child.stdout {
-        let mut last_command = Command::new(arguments[arguments.len() - 1][0]);
+        let mut last_command = Command::new(&arguments[arguments.len() - 1][0]);
         last_command.args(&arguments[arguments.len() - 1][1..]);
         last_command.stdin(last_child_output);
 

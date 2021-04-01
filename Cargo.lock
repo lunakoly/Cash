@@ -95,6 +95,7 @@ version = "0.1.0"
 dependencies = [
  "building",
  "parsing",
+ "processing",
  "serde_json",
 ]
 

@@ -15,23 +15,38 @@ use processing::{launch_pipeline, launch_input_substitution, launch_output_subst
 
 use terminals::terminal_stream::TerminalStream;
 
-fn test_processing() -> std::io::Result<()> {
-    println!("Testing Processing:");
+use std::fs::File;
 
-    // let result = launch_command(&["E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\test.bat"])?
+use cash::runner::Runner;
+
+fn test_processing() -> std::io::Result<()> {
+    // println!("Testing Processing:");
+
+    // let result = launch_pipeline(
+    //     None,
+    //     Some(std::process::Stdio::piped()),
+    //     &[
+    //         &["E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\wrap.exe"],
+    //         &["E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\hide.exe"],
+    //     ]
+    // )?
     //     .wait_with_output()?;
 
-    let result = launch_pipeline(
-        None,
-        Some(std::process::Stdio::piped()),
-        &[
-            &["E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\test.bat"],
-        ]
-    )?
-        .wait_with_output()?;
+    // let input = File::open("E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\a.txt")?;
+    // let output = File::create("E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\c.txt")?;
 
-    let output = String::from_utf8_lossy(&result.stdout);
-    println!("Got: {:?}", &output);
+    // let result = launch_pipeline(
+    //     Some(input),
+    //     Some(output),
+    //     &[
+    //         &["E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\wrap.exe"],
+    //         &["E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\hide.exe"],
+    //     ]
+    // )?
+    //     .wait_with_output()?;
+
+    // let output = String::from_utf8_lossy(&result.stdout);
+    // println!("Got: {:?}", &output);
     Ok(())
 }
 
@@ -47,6 +62,8 @@ fn main() {
     let mut tokenizer = Lexer::new(&mut accumulator_stream);
     let mut parser = Parser::new(&mut tokenizer);
 
+    let mut runner = Runner::new();
+
     loop {
         if !parser.has_next() {
             break;
@@ -56,6 +73,12 @@ fn main() {
         let mut ast = wrapped.borrow_mut();
 
         ast.accept_leveled_visitor(&mut cash::ast::ASTPrinter, 0);
+
+        ast.accept_runner_visitor_no_body(&mut runner);
+
+        if runner.should_exit {
+            break;
+        }
 
         let stdout = stdout();
         let message = String::from("Done!");

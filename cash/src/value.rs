@@ -1,9 +1,14 @@
 pub mod string;
 pub mod number;
+pub mod none;
 
 use std::fmt::Debug;
 
+use std::any::Any;
+
 pub trait Value : Debug {
+    fn as_any(&self) -> &dyn Any;
+
     fn to_string(&self) -> String;
 
     fn get(&self, subscripts: &[Box<dyn Value>]) -> Box<dyn Value>;

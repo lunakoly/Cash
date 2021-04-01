@@ -1,3 +1,5 @@
+// Copyright (C) 2021 luna_koly
+
 #include "terminal.h"
 
 bool default_is_ok(struct Terminal * self) {

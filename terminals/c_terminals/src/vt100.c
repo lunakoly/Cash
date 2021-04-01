@@ -1,5 +1,13 @@
+// Copyright (C) 2021 luna_koly
+//
+// Contains platform-independent implementations
+// only.
+
+// for the common types
 #include <stdint.h>
+// for debugging :)
 #include <stdio.h>
+// for malloc()
 #include <stdlib.h>
 
 #include "vt100.h"
@@ -63,12 +71,20 @@ void vt100_hide_cursor(struct Terminal * self) {
     printf("\033[?25l");
 }
 
+/**
+ * Quick alternative for
+ * std::vector...
+ */
 struct Line {
     struct Char4 * contents;
     size_t capacity;
     size_t size;
 };
 
+/**
+ * Returns a new Line with
+ * the default capacity of 64.
+ */
 struct Line line_new() {
     return (struct Line) {
         .contents = malloc(sizeof(struct Char4) * 64),
@@ -77,6 +93,10 @@ struct Line line_new() {
     };
 }
 
+/**
+ * Inserts `it` the the end
+ * of the line.
+ */
 void line_emplace_back(struct Char4 it, struct Line * line) {
     if (line->size >= line->capacity) {
         if (line->capacity * 2 < line->capacity) {
@@ -97,6 +117,10 @@ void line_emplace_back(struct Char4 it, struct Line * line) {
     line->size += 1;
 }
 
+/**
+ * Inserts `it` at the specified position
+ * within the line.
+ */
 void line_insert(struct Char4 it, size_t position, struct Line * line) {
     if (line->size >= line->capacity) {
         if (line->capacity * 2 < line->capacity) {
@@ -121,6 +145,10 @@ void line_insert(struct Char4 it, size_t position, struct Line * line) {
     line->size += 1;
 }
 
+/**
+ * Removes a character at the specified
+ * position from the line.
+ */
 void line_erase(size_t position, struct Line * line) {
     for (size_t that = position + 1; that < line->size; that++) {
         line->contents[that - 1] = line->contents[that];
@@ -150,6 +178,10 @@ struct Session {
     size_t position;
 };
 
+/**
+ * Returns the resulting user input
+ * as a single string of chars (UTF-8).
+ */
 char * session_compose(struct Session * session) {
     size_t length = 0;
     struct Char4 * next = session->line.contents;
@@ -302,12 +334,24 @@ void process_character(struct Char4 it, struct Session * session) {
         session->position -= 1;
     }
 
+    // there's nothing to implement, really;
+    // all this code will only be used to
+    // read the user command input;
+    // as soon as the user launches an app
+    // it'll be the terminal driver who will
+    // handle the basic line editing and other
+    // interaction
+
     else if (it.values[0] == KEY_SIGINT) {
-        printf("[SIGINT is not implemented yet :(]");
+        // printf("[This is not implemented yet :(]");
     }
 
     else if (it.values[0] == KEY_SIGSTOP) {
-        printf("[SIGSTOP is not implemented yet :(]");
+        // printf("[This is not implemented yet :(]");
+    }
+
+    else if (it.values[0] == KEY_EOF) {
+        // printf("[This is not implemented yet :(]");
     }
 }
 
@@ -322,16 +366,9 @@ char * vt100_read_line(struct Terminal * self) {
 
     struct Char4 it = terminal_get();
 
-    while (
-        it.values[0] != KEY_RETURN &&
-        it.values[0] != KEY_EOF
-    ) {
+    while (it.values[0] != KEY_RETURN) {
         process_character(it, &session);
         it = terminal_get();
-    }
-
-    if (it.values[0] == KEY_EOF) {
-        self->eof_found = 1;
     }
 
     (self->to_normal_mode)(self);

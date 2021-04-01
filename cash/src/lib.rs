@@ -4,6 +4,7 @@ pub mod liner;
 pub mod value;
 pub mod parser;
 pub mod grammar;
+pub mod runner;
 
 #[cfg(test)]
 mod tests {

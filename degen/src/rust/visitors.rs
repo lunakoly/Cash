@@ -31,18 +31,19 @@ const ACCEPTS_WITHOUT_USAGE: &'static str = ", _data: $$";
 
 pub const RETURNS: &'static str = " -> $$";
 
-fn render_accept_proto(visitor: &VisitorInfo) -> String {
-    let snake = visitor.name.to_snake_case();
+fn render_accept_proto(visitor: &VisitorInfo, visitor_name: &str) -> String {
+    let snake = visitor_name.to_snake_case();
     let accepts = render_non_empty(ACCEPTS, &visitor.accepts);
     let returns = render_non_empty(RETURNS, &visitor.returns);
-    return render(ACCEPT_PROTO_TEMPLATE, 4, &[&snake, &visitor.name, &accepts, &returns]);
+    return render(ACCEPT_PROTO_TEMPLATE, 4, &[&snake, visitor_name, &accepts, &returns]);
 }
 
 fn render_accept(
     visitor: &VisitorInfo,
-    self_name: &str
+    self_name: &str,
+    visitor_name: &str
 ) -> String {
-    let visitor_snake = visitor.name.to_snake_case();
+    let visitor_snake = visitor_name.to_snake_case();
     let self_snake = self_name.to_snake_case();
 
     let return_keyword = if !visitor.returns.is_empty() {
@@ -61,7 +62,7 @@ fn render_accept(
     let returns = render_non_empty(RETURNS, &visitor.returns);
 
     return render(ACCEPT_TEMPLATE, 4, &[
-        &visitor_snake, &visitor.name, &accepts, &returns, &return_keyword, &self_snake, &data_parameter
+        &visitor_snake, visitor_name, &accepts, &returns, &return_keyword, &self_snake, &data_parameter
     ]);
 }
 
@@ -69,7 +70,12 @@ pub fn render_node(visitors: &Vec<VisitorInfo>) -> String {
     let mut pieces = vec![];
 
     for it in visitors {
-        pieces.push(render_accept_proto(it));
+        if it.returns.is_empty() || !it.default.is_empty() {
+            pieces.push(render_accept_proto(it, &it.name));
+        }
+
+        let no_body = it.name.clone() + "NoBody";
+        pieces.push(render_accept_proto(it, &no_body));
     }
 
     return render_trait("Node", &pieces.join("\n\n"), 0);
@@ -80,7 +86,12 @@ pub fn render_impl_node(node: &NodeInfo, visitors: &Vec<VisitorInfo>) -> String 
     let mut pieces = vec![];
 
     for it in visitors {
-        pieces.push(render_accept(it, &node.name));
+        if it.returns.is_empty() || !it.default.is_empty() {
+            pieces.push(render_accept(it, &node.name, &it.name));
+        }
+
+        let no_body = it.name.clone() + "NoBody";
+        pieces.push(render_accept(it, &node.name, &no_body));
     }
 
     return render_impl("Node", &full_name, &pieces.join("\n\n"), 0);
@@ -92,18 +103,36 @@ const VISIT_TEMPLATE: &'static str = "
     }
 ";
 
+fn render_node_visit(it: &NodeInfo, visitor: &VisitorInfo, template: &str) -> String {
+    let snake = it.name.to_snake_case();
+    let accepts = render_non_empty(ACCEPTS_WITHOUT_USAGE, &visitor.accepts);
+    let returns = render_non_empty(RETURNS, &visitor.returns);
+    let node_name = "nodes::".to_owned() + &it.name;
+    let default = "    ".to_owned() + &visitor.default;
+    return render(template, 4, &[&snake, &node_name, &accepts, &returns, &default]);
+}
+
 pub fn render_trait_visitor(visitor: &VisitorInfo, nodes: &Vec<NodeInfo>) -> String {
     let mut pieces = vec!();
 
     for it in nodes {
-        let snake = it.name.to_snake_case();
-        let accepts = render_non_empty(ACCEPTS_WITHOUT_USAGE, &visitor.accepts);
-        let returns = render_non_empty(RETURNS, &visitor.returns);
-        let node_name = "nodes::".to_owned() + &it.name;
-        let default = "    ".to_owned() + &visitor.default;
-        let visit = render(VISIT_TEMPLATE, 4, &[&snake, &node_name, &accepts, &returns, &default]);
-        pieces.push(visit);
+        pieces.push(render_node_visit(it, visitor, VISIT_TEMPLATE));
     }
 
     return render_trait(&visitor.name, &pieces.join("\n\n"), 0);
+}
+
+const VISIT_TEMPLATE_NO_BODY: &'static str = "
+    fn visit_$$(&mut self, it: &mut $$$$)$$;
+";
+
+pub fn render_trait_visitor_no_body(visitor: &VisitorInfo, nodes: &Vec<NodeInfo>) -> String {
+    let visitor_name = visitor.name.clone() + "NoBody";
+    let mut pieces = vec!();
+
+    for it in nodes {
+        pieces.push(render_node_visit(it, visitor, VISIT_TEMPLATE_NO_BODY));
+    }
+
+    return render_trait(&visitor_name, &pieces.join("\n\n"), 0);
 }

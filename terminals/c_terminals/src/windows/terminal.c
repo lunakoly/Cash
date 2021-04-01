@@ -1,5 +1,15 @@
+// Copyright (C) 2021 luna_koly
+//
+// Platform-specific details.
+//
+// See Microsoft docs for _getch() and ENABLE_VIRTUAL_TERMINAL_PROCESSING
+// for more information about conio library and VT100 support.
+// https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+// https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/getch-getwch?view=vs-2019
+
 // for _getch()
 #include <conio.h>
+// for debugging :)
 #include <stdio.h>
 
 #include "../keys.h"

@@ -6,9 +6,9 @@ pub struct StringValue {
 }
 
 impl StringValue {
-    pub fn new(value: String) -> StringValue {
+    pub fn new(value: &str) -> StringValue {
         StringValue {
-            value: value,
+            value: value.to_owned(),
         }
     }
 
@@ -22,6 +22,10 @@ impl StringValue {
 }
 
 impl Value for StringValue {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn to_string(&self) -> String {
         return self.value.clone();
     }

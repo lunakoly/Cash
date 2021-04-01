@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 parsing = { path = "../parsing", version = "*"}
+processing = { path = "../processing", version = "*"}
 
 [build-dependencies]
 serde_json = { version = "1.0", features = ["preserve_order"] }

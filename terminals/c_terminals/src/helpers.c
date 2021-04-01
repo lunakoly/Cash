@@ -1,3 +1,6 @@
+// Copyright (C) 2021 luna_koly
+
+// for the common types
 #include <stddef.h>
 
 #include "helpers.h"
@@ -7,8 +10,11 @@ struct Char4 char4_new(const char * value) {
         .values = "\0\0\0\0"
     };
 
-    for (size_t it = 0; it < 4; it++) {
+    size_t it = 0;
+
+    while (it < 4 && result.values[it] != '\0') {
         result.values[it] = value[it];
+        it += 1;
     }
 
     return result;

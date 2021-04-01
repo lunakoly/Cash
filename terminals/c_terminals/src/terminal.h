@@ -1,19 +1,47 @@
+// Copyright (C) 2021 luna_koly
+//
+// Defines the main terminal abstraction
+// as well as some common terminal-related
+// functions
+
+// for the bool
 #include <stdbool.h>
+// for the common types
 #include <stddef.h>
 
 #pragma once
 
 #include "helpers.h"
 
+/**
+ * Common functionality for any
+ * terminal.
+ */
 struct Terminal {
+    /**
+     * Platform-specific backend.
+     */
     void * features;
+    /**
+     * Human-readable message in case
+     * something went wrong.
+     */
     char * error;
-    bool eof_found;
     /**
      * Returns false if an error occured
      * somewhere.
      */
     bool (*is_ok)(struct Terminal * self);
+    /**
+     * Puts the terminal into the raw mode.
+     * https://en.wikipedia.org/wiki/Seventh_Edition_Unix_terminal_interface#Input_modes
+     */
+    bool (*to_raw_mode)(struct Terminal * self);
+    /**
+     * Puts the terminal into the mode it used to be
+     * before going to the raw mode.
+     */
+    bool (*to_normal_mode)(struct Terminal * self);
     /**
      * Returns the number of the columns and
      * the rows.
@@ -80,12 +108,16 @@ struct Terminal {
      * Enter.
      */
     char * (*read_line)(struct Terminal * self);
-
-    bool (*to_raw_mode)(struct Terminal * self);
-    bool (*to_normal_mode)(struct Terminal * self);
 };
 
+/**
+ * The one and only implementation
+ * for the `is_ok()`.
+ */
 bool default_is_ok(struct Terminal * self);
+
+// This code has been taken from:
+// https://stackoverflow.com/questions/1031645/how-to-detect-utf-8-in-plain-c
 
 bool is_1_byte_utf8(const char * bytes);
 bool is_2_byte_utf8(const char * bytes);
@@ -94,6 +126,15 @@ bool is_4_byte_utf8(const char * bytes);
 
 bool is_valid_utf8(const char * text);
 
+/**
+ * Returns a single byte from the
+ * stdin without waiting (a crossplatform
+ * `getch()`).
+ */
 char terminal_get_1_byte();
 
+/**
+ * Returns a single UTF-8 dynamic-width
+ * character from the stdin.
+ */
 struct Char4 terminal_get();

@@ -4,28 +4,27 @@
 
 #pragma once
 
+/**
+ * A pair of 2 integers.
+ * Suitable for dimensions and
+ * coordinates.
+ */
 struct PairIntInt {
     int first;
     int second;
 };
 
+/**
+ * Represents a UTF-8
+ * character.
+ */
 struct Char4 {
     char values[5];
 };
 
+/**
+ * Constructs a new Char4.
+ * Only the first 4 `char`s from
+ * the `value` are taken
+ */
 struct Char4 char4_new(const char * value);
-
-// /**
-//  * Joins arguments into a single string.
-//  */
-// std::string join(const std::vector<std::string> & words, const std::string & delimiter = ", ") {
-//     std::stringstream line_stream;
-
-//     std::copy(
-//         words.begin(),
-//         words.end(),
-//         std::ostream_iterator<std::string>(line_stream, delimiter.c_str())
-//     );
-
-//     return line_stream.str();
-// }
