@@ -4,8 +4,6 @@ use parsing::stream::*;
 use parsing::stream::buffered_stream::*;
 use parsing::stream::text_stream::*;
 
-use std::io::{Stdin, BufRead, BufReader};
-
 pub struct TerminalStream {
     /// Number of read values.
     pub offset: usize,

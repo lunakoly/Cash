@@ -1,23 +1,25 @@
 use ferris_says::say;
 
 use std::io::{stdout, BufWriter};
-use std::io::{stdin};
 
 use parsing::stream::{Stream};
-use parsing::stream::stdin_stream::{StdinStream};
+// use parsing::stream::stdin_stream::{StdinStream};
 use parsing::stream::accumulator_stream::{SimpleAccumulatorStream};
 
 use cash::ast::*;
 use cash::lexer::{Lexer};
 use cash::parser::{Parser};
 
-use processing::{launch_pipeline, launch_input_substitution, launch_output_substitution};
+// use processing::{launch_pipeline, launch_input_substitution, launch_output_substitution};
 
 use terminals::terminal_stream::TerminalStream;
 
-use std::fs::File;
+// use std::fs::File;
 
 use cash::runner::Runner;
+
+use cash::cast;
+use cash::value;
 
 fn test_processing() -> std::io::Result<()> {
     // println!("Testing Processing:");
@@ -74,7 +76,17 @@ fn main() {
 
         ast.accept_leveled_visitor(&mut cash::ast::ASTPrinter, 0);
 
-        ast.accept_runner_visitor_no_body(&mut runner);
+        let result = ast.accept_runner_visitor_no_body(&mut runner);
+
+        if let Some(string) = cast!(result => value::string::StringValue) {
+            println!("String ::: {:?}", string);
+        } else if let Some(number) = cast!(result => value::number::NumberValue) {
+            println!("Number ::: {:?}", number);
+        } else if let Some(boolean) = cast!(result => value::boolean::BooleanValue) {
+            println!("Boolean ::: {:?}", boolean);
+        } else if let Some(none) = cast!(result => value::none::NoneValue) {
+            println!("::: None :::");
+        }
 
         if runner.should_exit {
             break;

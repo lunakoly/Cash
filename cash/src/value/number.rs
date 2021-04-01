@@ -1,10 +1,14 @@
-use crate::value::*;
+use crate::cast;
 
-use crate::value::string::{StringValue};
+use crate::value::*;
+use crate::value::none::NoneValue;
+use crate::value::boolean::BooleanValue;
+
+pub const NUMBER_TYPE: &'static str = "Number";
 
 #[derive(Clone, Debug)]
 pub struct NumberValue {
-    value: i32,
+    pub value: i32,
 }
 
 impl NumberValue {
@@ -14,12 +18,14 @@ impl NumberValue {
         }
     }
 
-    fn todo_binary(&self, other: Box<dyn Value>) -> Box<dyn Value> {
-        return Box::new(
-            StringValue::new(
-                &(self.to_string() + &other.to_string())
-            )
-        );
+    pub fn create(initial: i32) -> Box<NumberValue> {
+        Box::new(NumberValue::new(initial))
+    }
+}
+
+impl Labeled for NumberValue {
+    fn get_type_name() -> &'static str {
+        NUMBER_TYPE
     }
 }
 
@@ -28,71 +34,141 @@ impl Value for NumberValue {
         self
     }
 
+    fn get_type_name(&self) -> &'static str {
+        NUMBER_TYPE
+    }
+
     fn to_string(&self) -> String {
         return self.value.to_string();
     }
 
-    fn get(&self, subscripts: &[Box<dyn Value>]) -> Box<dyn Value> {
-        return Box::new(
-            StringValue::new(
-                &subscripts.iter().map(|it| it.to_string()).collect::<Vec<String>>().join("::"),
-            )
-        );
+    fn get(&self, _subscripts: &[Box<dyn Value>]) -> Box<dyn Value> {
+        NoneValue::create()
     }
 
-    fn set(&self, _subscripts: &[Box<dyn Value>], _value: Box<dyn Value>) {
-        // TODO
+    fn set(&self, _subscripts: &[Box<dyn Value>], _value: Box<dyn Value>) -> Box<dyn Value> {
+        NoneValue::create()
     }
 
     fn unary_plus(&self) -> Box<dyn Value> {
-        // TODO
-        return Box::new(self.clone());
+        NumberValue::create(
+            self.value
+        )
     }
 
     fn unary_minus(&self) -> Box<dyn Value> {
-        // TODO
-        return Box::new(self.clone());
+        NumberValue::create(
+            -self.value
+        )
     }
 
     fn not(&self) -> Box<dyn Value> {
-        // TODO
-        return Box::new(self.clone());
+        NumberValue::create(
+            !self.value
+        )
     }
 
     fn power(&self, other: Box<dyn Value>) -> Box<dyn Value> {
-        self.todo_binary(other)
+        let maybe_number = cast! { other => NumberValue };
+
+        if let Some(number) = maybe_number {
+            let mut result = self.value;
+
+            if number.value < 0 {
+                return NumberValue::create(0);
+            }
+
+            if number.value == 0 {
+                return NumberValue::create(1);
+            }
+
+            for _ in 1..number.value {
+                result *= self.value;
+            }
+
+            return NumberValue::create(result);
+        }
+
+        NoneValue::create()
     }
 
     fn times(&self, other: Box<dyn Value>) -> Box<dyn Value> {
-        self.todo_binary(other)
+        let maybe_number = cast! { other => NumberValue };
+
+        if let Some(number) = maybe_number {
+            return NumberValue::create(self.value * number.value);
+        }
+
+        NoneValue::create()
     }
 
     fn divide(&self, other: Box<dyn Value>) -> Box<dyn Value> {
-        self.todo_binary(other)
+        let maybe_number = cast! { other => NumberValue };
+
+        if let Some(number) = maybe_number {
+            return NumberValue::create(self.value / number.value);
+        }
+
+        NoneValue::create()
     }
 
     fn reminder(&self, other: Box<dyn Value>) -> Box<dyn Value> {
-        self.todo_binary(other)
+        let maybe_number = cast! { other => NumberValue };
+
+        if let Some(number) = maybe_number {
+            return NumberValue::create(self.value % number.value);
+        }
+
+        NoneValue::create()
     }
 
     fn plus(&self, other: Box<dyn Value>) -> Box<dyn Value> {
-        self.todo_binary(other)
+        let maybe_number = cast! { other => NumberValue };
+
+        if let Some(number) = maybe_number {
+            return NumberValue::create(self.value + number.value);
+        }
+
+        NoneValue::create()
     }
 
     fn minus(&self, other: Box<dyn Value>) -> Box<dyn Value> {
-        self.todo_binary(other)
+        let maybe_number = cast! { other => NumberValue };
+
+        if let Some(number) = maybe_number {
+            return NumberValue::create(self.value - number.value);
+        }
+
+        NoneValue::create()
     }
 
-    fn contains(&self, _other: Box<dyn Value>) -> bool {
-        return false;
+    fn contains(&self, _other: Box<dyn Value>) -> Box<BooleanValue> {
+        BooleanValue::create(false)
     }
 
-    fn equals(&self, other: Box<dyn Value>) -> bool {
-        return self.to_string() == other.to_string();
+    fn equals(&self, other: Box<dyn Value>) -> Box<BooleanValue> {
+        let maybe_number = cast! { other => NumberValue };
+
+        if let Some(number) = maybe_number {
+            return BooleanValue::create(self.value == number.value);
+        }
+
+        BooleanValue::create(false)
     }
 
-    fn compare(&self, _other: Box<dyn Value>) -> i8 {
-        // TODO
-        return 0;
+    fn compare(&self, other: Box<dyn Value>) -> Box<NumberValue> {
+        let maybe_number = cast! { other => NumberValue };
+
+        if let Some(number) = maybe_number {
+            let that = match self.value - number.value {
+                0 => 0,
+                it if it > 0 => 1,
+                _ => -1,
+            };
+
+            return NumberValue::create(that);
+        }
+
+        NumberValue::create(0)
     }
 }
