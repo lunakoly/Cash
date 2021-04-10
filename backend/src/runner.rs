@@ -143,7 +143,7 @@ impl SimpleVisitor for Runner {
             }
 
             if arguments[0] == "pass" {
-                self.value = if command.len() > 2 {
+                self.value = if command.len() >= 2 {
                     command.remove(1)
                 } else {
                     NoneValue::create()

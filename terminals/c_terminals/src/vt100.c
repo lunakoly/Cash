@@ -21,17 +21,11 @@ void vt100_put(struct Terminal * self, struct Char4 symbol) {
     if (is_1_byte_utf8(symbol.values)) {
         printf("%c", symbol.values[0]);
     } else if (is_2_byte_utf8(symbol.values)) {
-        printf("%c", symbol.values[0]);
-        printf("%c", symbol.values[1]);
+        printf("%c%c", symbol.values[0], symbol.values[1]);
     } else if (is_3_byte_utf8(symbol.values)) {
-        printf("%c", symbol.values[0]);
-        printf("%c", symbol.values[1]);
-        printf("%c", symbol.values[2]);
+        printf("%c%c%c", symbol.values[0], symbol.values[1], symbol.values[2]);
     } else if (is_4_byte_utf8(symbol.values)) {
-        printf("%c", symbol.values[0]);
-        printf("%c", symbol.values[1]);
-        printf("%c", symbol.values[2]);
-        printf("%c", symbol.values[3]);
+        printf("%c%c%c%c", symbol.values[0], symbol.values[1], symbol.values[2], symbol.values[3]);
     }
 }
 
@@ -370,6 +364,10 @@ char * vt100_read_line(struct Terminal * self) {
         process_character(it, &session);
         it = terminal_get();
     }
+
+    int columns = (self->get_columns)(self);
+    (self->move_directly)(self, columns - 1);
+    (self->put)(self, char4_new("\n"));
 
     (self->to_normal_mode)(self);
     return session_compose(&session);

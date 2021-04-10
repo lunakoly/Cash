@@ -1,6 +1,7 @@
-use ferris_says::say;
+// use ferris_says::say;
 
-use std::io::{stdout, BufWriter};
+// use std::io::{stdout, BufWriter};
+use std::io::Write;
 
 use parsing::stream::{Stream};
 // use parsing::stream::stdin_stream::{StdinStream};
@@ -20,6 +21,8 @@ use backend::runner::Runner;
 
 use backend::cast;
 use backend::value;
+
+use helpers::{elvis, result_or};
 
 fn test_processing() -> std::io::Result<()> {
     // println!("Testing Processing:");
@@ -55,7 +58,7 @@ fn test_processing() -> std::io::Result<()> {
 fn main() {
     test_processing().unwrap();
 
-    println!("Starting: ");
+    println!("Welcome!");
 
     // let mut user_input = StdinStream::new();
     let mut user_input = TerminalStream::new();
@@ -71,21 +74,23 @@ fn main() {
             break;
         }
 
+        print!("$ ");
+        let result = result_or! { std::io::stdout().flush() => break };
+
         let wrapped = parser.grab();
         let mut ast = wrapped.borrow_mut();
 
-        // ast.accept_leveled_visitor(&mut frontend::ast::ASTPrinter, 0);
-
+        ast.accept_leveled_visitor(&mut frontend::ast::ASTPrinter, 0);
         ast.accept_simple_visitor(&mut runner);
 
         if let Some(string) = cast!(runner.value => value::string::StringValue) {
-            println!("String ::: {:?}", string);
+            println!("::: {:?} :::", string);
         } else if let Some(number) = cast!(runner.value => value::number::NumberValue) {
-            println!("Number ::: {:?}", number);
+            println!("::: {:?} :::", number);
         } else if let Some(boolean) = cast!(runner.value => value::boolean::BooleanValue) {
-            println!("Boolean ::: {:?}", boolean);
+            println!("::: {:?} :::", boolean);
         } else if let Some(none) = cast!(runner.value => value::none::NoneValue) {
-            println!("::: None :::");
+            println!("::: {:?} :::", none);
         }
 
         if runner.should_exit {

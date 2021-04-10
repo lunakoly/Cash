@@ -12,7 +12,7 @@ struct Char4 char4_new(const char * value) {
 
     size_t it = 0;
 
-    while (it < 4 && result.values[it] != '\0') {
+    while (it < 4 && value[it] != '\0') {
         result.values[it] = value[it];
         it += 1;
     }
