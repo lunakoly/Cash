@@ -70,7 +70,7 @@ impl <'a> Parser<'a> {
                     values: vec![
                         Box::new(
                             Leaf {
-                                value: Token::String {
+                                value: Token::Text {
                                     value: "[error]".to_owned()
                                 }
                             }

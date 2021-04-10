@@ -8,7 +8,7 @@ use crate::ast::nodes::*;
 fn create_todo(location: &str) -> Box<dyn Node> {
     Box::new(
         Leaf {
-            value: Token::String {
+            value: Token::Text {
                value: "[todo:".to_owned() + location + "]"
             }
         }
@@ -66,9 +66,20 @@ fn extract_value(mut target: Box<dyn Node>) -> String {
             Token::Operator { value } => &value,
             Token::Delimiter { value } => &value,
             Token::Number { value, .. } => &value,
-            Token::String { value } => &value,
+            Token::Text { value } => &value,
+            Token::Whitespace { value } => &value,
             _ => "",
         };
+    });
+
+    target.accept_simple_visitor(&mut extractor);
+
+    if !result.is_empty() {
+        return result;
+    }
+
+    let mut extractor = Extractor::new(|it: &mut Text| {
+        result += &it.value;
     });
 
     target.accept_simple_visitor(&mut extractor);
@@ -97,6 +108,85 @@ fn handle_binary_long(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
         )
     } else {
         create_todo("binary_long")
+    }
+}
+
+fn handle_text_create(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 1 {
+        Box::new(
+            Text {
+                value: extract_value(pattern.remove(0))
+            }
+        )
+    } else {
+        create_todo("text_create")
+    }
+}
+
+fn handle_text_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 2 {
+        let old = pattern.remove(0);
+        let new = pattern.remove(0);
+
+        Box::new(
+            Text {
+                value: extract_value(old) + &extract_value(new)
+            }
+        )
+    } else {
+        create_todo("text_append")
+    }
+}
+
+fn handle_text_part_substitution(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 3 {
+        pattern.remove(1)
+    } else {
+        create_todo("text_part_substitution")
+    }
+}
+
+fn handle_text_parts_create(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 1 {
+        Box::new(
+            TextParts {
+                parts: vec![pattern.remove(0)]
+            }
+        )
+    } else {
+        create_todo("text_parts_create")
+    }
+}
+
+fn handle_text_parts_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 2 {
+        let mut parts = pattern.remove(0);
+        let element = pattern.remove(0);
+
+        let mut extractor = Extractor::new(move |it: &mut TextParts| {
+            it.parts.push(element);
+        });
+
+        parts.accept_simple_visitor(&mut extractor);
+        parts
+    } else {
+        create_todo("text_parts_append")
+    }
+}
+
+fn handle_string_create(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 3 {
+        pattern.remove(1)
+    } else {
+        create_todo("string_create")
+    }
+}
+
+fn handle_string_create_implicit(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 1 {
+        pattern.remove(0)
+    } else {
+        create_todo("string_create_implicit")
     }
 }
 

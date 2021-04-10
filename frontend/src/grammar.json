@@ -1,12 +1,31 @@
 {
     "handle_token": "handle_token",
     "rules": {
+        "text": {
+            "#whitespace": "handle_text_create",
+            "#text": "handle_text_create",
+            "@text #whitespace": "handle_text_append",
+            "@text #text": "handle_text_append"
+        },
+        "text_part": {
+            "@text": "handle_pass",
+            "( @expression )": "handle_text_part_substitution"
+        },
+        "text_parts": {
+            "@text_part": "handle_text_parts_create",
+            "@text_parts @text_part": "handle_text_parts_append"
+        },
+        "string": {
+            "\" @text_parts \"": "handle_string_create",
+            "' @text '": "handle_string_create",
+            "#text": "handle_string_create_implicit"
+        },
         "strings": {
-            "@strings , #string": "handle_strings_append",
-            "#string": "handle_strings_create"
+            "@strings , @string": "handle_strings_append",
+            "@string": "handle_strings_create"
         },
         "leaf": {
-            "#string": "handle_leaf_single",
+            "@string": "handle_pass",
             "#number": "handle_leaf_single",
             "( @expression )": "handle_leaf_substitution",
             "{ @expressions }": "handle_leaf_closure_independent",

@@ -20,7 +20,7 @@ fn parse_branches(rule_body_json: &Value) -> Vec<Branch> {
 
     for (pattern_string, handler) in rule_body_json.as_object().unwrap() {
         let branch = Branch {
-            pattern: pattern_string.split(" ").map(|it| it.to_owned()).collect(),
+            pattern: pattern_string.replace("\"", "\\\"").split(" ").map(|it| it.to_owned()).collect(),
             handler: handler.as_str().unwrap().to_owned(),
         };
 

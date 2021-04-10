@@ -31,14 +31,57 @@ mod tests {
     #[test]
     fn test_lexer_trivial() {
         assert_tokens("echo Hello, World!", &[
-            Token::String {
+            Token::Text {
                 value: "echo".to_owned()
             },
-            Token::String {
-                value: "Hello,".to_owned()
+            Token::Whitespace {
+                value: " ".to_owned()
             },
-            Token::String {
-                value: "World!".to_owned()
+            Token::Text {
+                value: "Hello".to_owned()
+            },
+            Token::Operator {
+                value: ",".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
+                value: "World".to_owned()
+            },
+            Token::Operator {
+                value: "!".to_owned()
+            },
+            Token::End,
+        ]);
+    }
+
+    #[test]
+    fn test_lexer_concatenation() {
+        assert_tokens("a,b a, b ,a", &[
+            Token::Text {
+                value: "a,b".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
+                value: "a".to_owned()
+            },
+            Token::Operator {
+                value: ",".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
+                value: "b".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
+                value: ",a".to_owned()
             },
             Token::End,
         ]);
@@ -51,40 +94,73 @@ mod tests {
                 value: "10".to_owned(),
                 base: 10,
             },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
             Token::Number {
                 value: "10".to_owned(),
                 base: 2,
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
             },
             Token::Number {
                 value: "10".to_owned(),
                 base: 8,
             },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
             Token::Number {
                 value: "10".to_owned(),
                 base: 16,
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
             },
             Token::Number {
                 value: "3".to_owned(),
                 base: 10,
             },
-            Token::String {
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
                 value: "3b".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
             },
             Token::Number {
                 value: "9".to_owned(),
                 base: 10,
             },
-            Token::String {
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
                 value: "9b".to_owned()
             },
-            Token::String {
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
                 value: "9o".to_owned()
             },
-            Token::String {
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
                 value: "f".to_owned()
             },
-            Token::String {
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
                 value: "fb".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
             },
             Token::Number {
                 value: "f".to_owned(),
@@ -97,24 +173,45 @@ mod tests {
     #[test]
     fn test_lexer_arithmetics() {
         assert_tokens("a + b a+b a+ +b 1+2 2+ +1 +++ a(b) a-b- a+7 7+b", &[
-            Token::String {
+            Token::Text {
+                value: "a".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Operator {
+                value: "+".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
+                value: "b".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
+                value: "a+b".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
                 value: "a".to_owned()
             },
             Token::Operator {
                 value: "+".to_owned()
             },
-            Token::String {
-                value: "b".to_owned()
+            Token::Whitespace {
+                value: " ".to_owned()
             },
-            Token::String {
-                value: "a+b".to_owned()
-            },
-            Token::String {
-                value: "a+".to_owned()
-            },
-            Token::String {
+            Token::Text {
                 value: "+b".to_owned()
             },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
             Token::Number {
                 value: "1".to_owned(),
                 base: 10
@@ -126,12 +223,18 @@ mod tests {
                 value: "2".to_owned(),
                 base: 10
             },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
             Token::Number {
                 value: "2".to_owned(),
                 base: 10
             },
             Token::Operator {
                 value: "+".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
             },
             Token::Operator {
                 value: "+".to_owned()
@@ -140,8 +243,8 @@ mod tests {
                 value: "1".to_owned(),
                 base: 10
             },
-            Token::Operator {
-                value: "+".to_owned()
+            Token::Whitespace {
+                value: " ".to_owned()
             },
             Token::Operator {
                 value: "+".to_owned()
@@ -149,30 +252,51 @@ mod tests {
             Token::Operator {
                 value: "+".to_owned()
             },
-            Token::String {
+            Token::Operator {
+                value: "+".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
                 value: "a".to_owned()
             },
             Token::Delimiter {
                 value: "(".to_owned()
             },
-            Token::String {
+            Token::Text {
                 value: "b".to_owned()
             },
             Token::Delimiter {
                 value: ")".to_owned()
             },
-            Token::String {
-                value: "a-b-".to_owned()
+            Token::Whitespace {
+                value: " ".to_owned()
             },
-            Token::String {
-                value: "a+7".to_owned()
+            Token::Text {
+                value: "a-b".to_owned()
+            },
+            Token::Operator {
+                value: "-".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
+                value: "a".to_owned()
+            },
+            Token::Operator {
+                value: "+".to_owned()
             },
             Token::Number {
                 value: "7".to_owned(),
                 base: 10
             },
-            Token::String {
-                value: "+b".to_owned()
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
+                value: "7+b".to_owned()
             },
             Token::End,
         ]);
@@ -184,13 +308,16 @@ mod tests {
             Token::Delimiter {
                 value: "$".to_owned()
             },
-            Token::String {
+            Token::Text {
                 value: "variable".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
             },
             Token::Delimiter {
                 value: "@".to_owned()
             },
-            Token::String {
+            Token::Text {
                 value: "descriptor".to_owned()
             },
             Token::End,

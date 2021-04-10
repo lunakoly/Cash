@@ -74,7 +74,7 @@ fn main() {
         let wrapped = parser.grab();
         let mut ast = wrapped.borrow_mut();
 
-        ast.accept_leveled_visitor(&mut frontend::ast::ASTPrinter, 0);
+        // ast.accept_leveled_visitor(&mut frontend::ast::ASTPrinter, 0);
 
         ast.accept_simple_visitor(&mut runner);
 
@@ -92,13 +92,13 @@ fn main() {
             break;
         }
 
-        let stdout = stdout();
-        let message = String::from("Done!");
-        let width = message.chars().count();
+        // let stdout = stdout();
+        // let message = String::from("Done!");
+        // let width = message.chars().count();
 
-        let mut writer = BufWriter::new(stdout.lock());
-        say(message.as_bytes(), width, &mut writer).unwrap();
+        // let mut writer = BufWriter::new(stdout.lock());
+        // say(message.as_bytes(), width, &mut writer).unwrap();
     }
 
-    println!("BYE");
+    // println!("BYE");
 }

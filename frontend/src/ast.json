@@ -1,5 +1,11 @@
 {
     "nodes": {
+        "Text": {
+            "value": "String"
+        },
+        "TextParts": {
+            "parts": "Vec<Box<dyn Node>>"
+        },
         "List": {
             "values": "Vec<Box<dyn Node>>"
         },

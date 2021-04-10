@@ -48,6 +48,25 @@ fn get_rule_by_name<'a, A>(
     return None;
 }
 
+/// Moves forward until a non-whitespace
+/// is met.
+fn skip_whitespaces<T: RepresentableToken>(
+    tokens: &[T],
+    token_index: usize,
+) -> usize {
+    let mut moved_token_index = token_index;
+
+    while tokens[moved_token_index].get_type_name() == "whitespace" {
+        moved_token_index += 1;
+
+        if moved_token_index >= tokens.len() {
+            break;
+        }
+    }
+
+    return moved_token_index;
+}
+
 /// Checks the next token
 /// against the proper rule.
 fn apply_item<A, T: RepresentableToken>(
@@ -60,28 +79,43 @@ fn apply_item<A, T: RepresentableToken>(
         return (None, token_index);
     }
 
-    if item.len() > 1 && item.starts_with("@") {
-        let rule_name = item.chars().skip(1).collect::<String>();
-        return apply_rule(&rule_name, tokens, token_index, grammar);
+    // println!("=> {:?}", item);
+    // println!("Next: {:?} = {:?}", tokens[token_index].get_type_name(), tokens[token_index].get_value());
+
+    let mut moved_token_index = token_index;
+
+    if item != "#whitespace" {
+        moved_token_index = skip_whitespaces(tokens, moved_token_index);
+
+        if moved_token_index >= tokens.len() {
+            return (None, token_index);
+        }
     }
+
+    // println!("Resl: {:?} = {:?}", tokens[moved_token_index].get_type_name(), tokens[moved_token_index].get_value());
 
     if item.starts_with("#") {
         let token_type = item.chars().skip(1).collect::<String>();
 
-        if tokens[token_index].get_type_name() != token_type {
+        if tokens[moved_token_index].get_type_name() != token_type {
             return (None, token_index);
         }
 
         return (
-            Some((grammar.handle_token)(&tokens[token_index])),
-            token_index + 1
+            Some((grammar.handle_token)(&tokens[moved_token_index])),
+            moved_token_index + 1
         );
     }
 
-    if Some(item) == tokens[token_index].get_value() {
+    if item.len() > 1 && item.starts_with("@") {
+        let rule_name = item.chars().skip(1).collect::<String>();
+        return apply_rule(&rule_name, tokens, moved_token_index, grammar);
+    }
+
+    if Some(item) == tokens[moved_token_index].get_value() {
         return (
-            Some((grammar.handle_token)(&tokens[token_index])),
-            token_index + 1
+            Some((grammar.handle_token)(&tokens[moved_token_index])),
+            moved_token_index + 1
         );
     }
 

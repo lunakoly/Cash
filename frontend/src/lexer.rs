@@ -19,7 +19,7 @@ pub enum Token {
         value: String,
         base: u8
     },
-    String {
+    Text {
         value: String
     },
     Whitespace {
@@ -35,7 +35,7 @@ impl RepresentableToken for Token {
             Token::Operator { .. } => "operator",
             Token::Delimiter { .. } => "delimiter",
             Token::Number { .. } => "number",
-            Token::String { .. } => "string",
+            Token::Text { .. } => "text",
             Token::Whitespace { .. } => "whitespace",
             Token::Newline { .. } => "newline",
             Token::End { .. } => "end",
@@ -48,7 +48,7 @@ impl RepresentableToken for Token {
             Token::Operator { value } => Some(value),
             Token::Delimiter { value } => Some(value),
             Token::Number { value, .. } => Some(value),
-            Token::String { value } => Some(value),
+            Token::Text { value } => Some(value),
             _ => None,
         }
     }
@@ -59,7 +59,7 @@ impl RepresentableToken for Token {
 /// between them
 pub const OPERATORS: &'static str = ":=+-*%#!&^|/.~[]{}<>;,";
 /// Delimiters never clue to strings
-pub const DELIMITERS: &'static str = "()$@";
+pub const DELIMITERS: &'static str = "()$@\"'";
 
 fn is_whitespace(symbol: char) -> bool {
     return " \t".contains(symbol);
@@ -96,11 +96,12 @@ fn is_hexadecimal(symbol: char) -> bool {
         ('A'..='F').contains(&symbol);
 }
 
-fn is_implicit_string_content(symbol: char) -> bool {
+fn is_text_content(symbol: char) -> bool {
     return
         !is_control(symbol) &&
         !is_whitespace(symbol) &&
-        symbol != '\n';
+        symbol != '\n' &&
+        symbol != '\\';
 }
 
 /// Splits the input into tokens.
@@ -125,6 +126,20 @@ impl <'a> Lexer<'a> {
         }
 
         return Token::Whitespace {
+            value: self.backend.revise_all()
+        };
+    }
+
+    fn read_escape(&mut self) -> Token {
+        let next = self.backend.grab();
+
+        if next == Some('\n') {
+            return Token::Whitespace {
+                value: self.backend.revise_all()
+            }
+        }
+
+        return Token::Text {
             value: self.backend.revise_all()
         };
     }
@@ -189,19 +204,16 @@ impl <'a> Lexer<'a> {
         };
     }
 
-    fn read_implicit_string(&mut self) -> Token {
+    fn read_text(&mut self) -> Token {
         while let Some(symbol) = self.backend.peek() {
-            if is_implicit_string_content(symbol) {
-                self.backend.step();
-            } else if symbol == '\\' {
-                self.backend.step();
+            if is_text_content(symbol) {
                 self.backend.step();
             } else {
                 break;
             }
         }
 
-        return Token::String {
+        return Token::Text {
             value: self.backend.revise_all()
         };
     }
@@ -214,7 +226,8 @@ impl <'a> Lexer<'a> {
         }
 
         if self.backend.accept('\\') {
-            return self.read_implicit_string();
+            self.backend.step();
+            return self.read_escape();
         }
 
         if self.backend.accept('\n') {
@@ -262,7 +275,7 @@ impl <'a> Lexer<'a> {
             }
 
             self.backend.step();
-            return self.read_implicit_string();
+            return self.read_text();
         }
 
         return Token::End;

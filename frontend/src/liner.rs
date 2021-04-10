@@ -25,42 +25,21 @@ pub fn transform(
         }
     }
 
-    println!("After Some Transformation:");
-    for it in &result {
-        println!("    {:?}", it);
-    }
-    println!("");
+    // println!("After Some Transformation:");
+    // for it in &result {
+    //     println!("    {:?}", it);
+    // }
+    // println!("");
 
     return result;
 }
 
-fn transform_duplicate_whitespaces(
-    last: &Token,
-    next: &Token,
-    tokens: &mut Vec<Token>
-) {
-    match (last, next) {
-        (
-            Token::Whitespace { value: last_value },
-            Token::Whitespace { value: next_value }
-        ) => {
-            tokens.pop();
-            tokens.push(
-                Token::Whitespace { value: last_value.clone() + &next_value }
-            );
-        },
-        _ => {
-            tokens.push(next.clone());
-        },
-    }
-}
-
-pub fn base_to_suffix(base: u8) -> String {
-    match base {
-        2 => "b".to_owned(),
-        8 => "o".to_owned(),
-        16 => "h".to_owned(),
-        _ => "".to_owned(),
+pub fn suffix_to_base(suffix: &str) -> Option<u8> {
+    match suffix {
+        "b" => Some(2),
+        "o" => Some(8),
+        "h" => Some(16),
+        _ => None,
     }
 }
 
@@ -99,66 +78,36 @@ fn transform_numbers(
         },
         (
             Token::NumberSegment { value: last_value, base },
-            Token::String { value: next_value }
+            Token::Text { value: next_value }
         ) => {
             tokens.pop();
 
-            if *next_value == "b" {
-                if *base == 2 {
+            if let Some(desired_base) = suffix_to_base(next_value) {
+                if *base <= desired_base {
                     return tokens.push(Token::Number {
                         value: last_value.clone(),
-                        base: 2
+                        base: desired_base
                     });
                 }
 
                 return tokens.push(
-                    Token::String {
-                        value: last_value.clone() + &next_value
-                    }
-                );
-            }
-
-            if *next_value == "o" {
-                if *base <= 8 {
-                    return tokens.push(Token::Number {
-                        value: last_value.clone(),
-                        base: 8
-                    });
-                }
-
-                return tokens.push(
-                    Token::String {
-                        value: last_value.clone() + &next_value
-                    }
-                );
-            }
-
-            if *next_value == "h" {
-                if *base <= 16 {
-                    return tokens.push(Token::Number {
-                        value: last_value.clone(),
-                        base: 16
-                    });
-                }
-
-                return tokens.push(
-                    Token::String {
+                    Token::Text {
                         value: last_value.clone() + &next_value
                     }
                 );
             }
 
             tokens.push(
-                Token::String { value: last_value.clone() + &next_value }
+                Token::Text { value: last_value.clone() + &next_value }
             );
         },
         (
-            Token::String { value: last_value },
+            Token::Text { value: last_value },
             Token::NumberSegment { value: next_value, base: _ }
         ) => {
             tokens.pop();
             tokens.push(
-                Token::String { value: last_value.clone() + &next_value }
+                Token::Text { value: last_value.clone() + &next_value }
             );
         },
         (
@@ -176,7 +125,7 @@ fn transform_numbers(
                 );
             } else {
                 tokens.push(
-                    Token::String { value: last_value.clone() }
+                    Token::Text { value: last_value.clone() }
                 );
             }
 
@@ -188,55 +137,55 @@ fn transform_numbers(
     }
 }
 
-fn transform_tight_strings(
+fn transform_tight_tokens(
     last: &Token,
     next: &Token,
     tokens: &mut Vec<Token>
 ) {
     match (last, next) {
         (
+            Token::Text { value: last_value },
+            Token::Text { value: next_value }
+        ) => {
+            tokens.pop();
+            tokens.push(
+                Token::Text { value: last_value.clone() + &next_value }
+            );
+        },
+        (
+            Token::Whitespace { value: last_value },
+            Token::Whitespace { value: next_value }
+        ) => {
+            tokens.pop();
+            tokens.push(
+                Token::Whitespace { value: last_value.clone() + &next_value }
+            );
+        },
+        (
             Token::Operator { value: last_value },
-            Token::String { value: next_value }
+            Token::Text { value: next_value }
         ) => {
             tokens.pop();
             tokens.push(
-                Token::String { value: last_value.clone() + &next_value }
-            );
-        },
-        (
-            Token::String { value: last_value },
-            Token::Operator { value: next_value }
-        ) => {
-            tokens.pop();
-            tokens.push(
-                Token::String { value: last_value.clone() + &next_value }
-            );
-        },
-        (
-            Token::String { value: last_value },
-            Token::String { value: next_value }
-        ) => {
-            tokens.pop();
-            tokens.push(
-                Token::String { value: last_value.clone() + &next_value }
+                Token::Text { value: last_value.clone() + &next_value }
             );
         },
         (
             Token::Number { value: last_value, base: _ },
-            Token::String { value: next_value }
+            Token::Text { value: next_value }
         ) => {
             tokens.pop();
             tokens.push(
-                Token::String { value: last_value.clone() + &next_value }
+                Token::Text { value: last_value.clone() + &next_value }
             );
         },
         (
-            Token::String { value: last_value },
+            Token::Text { value: last_value },
             Token::Number { value: next_value, base: _ }
         ) => {
             tokens.pop();
             tokens.push(
-                Token::String { value: last_value.clone() + &next_value }
+                Token::Text { value: last_value.clone() + &next_value }
             );
         },
         _ => {
@@ -269,23 +218,23 @@ impl <'a> Liner<'a> {
             }
         }
 
-        println!("Initial Tokens:");
-        for it in &line {
-            println!("    {:?}", it);
-        }
-        println!("");
+        // println!("Initial Tokens:");
+        // for it in &line {
+        //     println!("    {:?}", it);
+        // }
+        // println!("");
 
-        line = transform(&line, &transform_duplicate_whitespaces);
         line = transform(&line, &transform_numbers);
-        line = transform(&line, &transform_tight_strings);
+        line = transform(&line, &transform_tight_tokens);
+        line = transform(&line, &transform_tight_tokens);
 
-        line = line.iter()
-            .filter(|&it| match it {
-                Token::Whitespace { value: _ } => false,
-                _ => true,
-            })
-            .cloned()
-            .collect();
+        // line = line.iter()
+        //     // .filter(|&it| match it {
+        //     //     Token::Whitespace { value: _ } => false,
+        //     //     _ => true,
+        //     // })
+        //     .cloned()
+        //     .collect();
 
         return line;
     }

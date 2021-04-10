@@ -60,6 +60,21 @@ fn create_todo(location: &str) -> Box<dyn Value> {
 }
 
 impl SimpleVisitor for Runner {
+    fn visit_text(&mut self, it: &mut Text) {
+        self.value = StringValue::create(&it.value);
+    }
+
+    fn visit_text_parts(&mut self, it: &mut TextParts) {
+        let mut result = String::new();
+
+        for part in &mut it.parts {
+            let value = with_value! { self => part.accept_simple_visitor(self) };
+            result += &value.to_string();
+        }
+
+        self.value = StringValue::create(&result);
+    }
+
 	fn visit_list(&mut self, it: &mut List) {
         self.value = create_todo("visit_list")
     }
@@ -72,7 +87,7 @@ impl SimpleVisitor for Runner {
             Token::Delimiter { value } => {
                 StringValue::create(&value)
             },
-            Token::String { value } => {
+            Token::Text { value } => {
                 match &**value {
                     "None" => NoneValue::create(),
                     "True" => BooleanValue::create(true),
@@ -137,7 +152,6 @@ impl SimpleVisitor for Runner {
             }
 
             if let None = cast!(&command[0] => StringValue) {
-                println!("NONE");
                 self.value = command.remove(0);
                 return;
             }
@@ -150,31 +164,24 @@ impl SimpleVisitor for Runner {
             return;
         }
 
-        println!("PIPE: {:?}", commands);
-
         let maybe_child = launch_pipeline::<fs::File, fs::File>(None, None, &commands);
 
         let child = result_or! { maybe_child => {
             self.value = NoneValue::create();
-            println!("couln't spawn a child");
+            println!("Error > Command spawn a child");
             return;
         }};
-
-        println!("child ok");
 
         let maybe_result = child.wait_with_output();
 
         let result = result_or! { maybe_result => {
             self.value = NoneValue::create();
-            println!("couln't capture output");
+            println!("Error > Couln't capture output");
             return;
         }};
 
-        println!("result ok");
-        let output = String::from_utf8_lossy(&result.stdout);
-        println!("output: {:?}", output);
-
-        self.value = StringValue::create("DONE");
+        let _output = String::from_utf8_lossy(&result.stdout);
+        self.value = NoneValue::create();
     }
 
     fn visit_unary(&mut self, it: &mut Unary) {
