@@ -13,6 +13,8 @@ use crate::grammar::{get_grammar};
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use parsing::ruler::RepresentableToken;
+
 impl PartialEq for Expressions {
     fn eq(&self, other: &Self) -> bool {
         return self.values.is_empty() && other.values.is_empty();
@@ -47,12 +49,32 @@ impl <'a> Parser<'a> {
             _ => {},
         }
 
-        let (ast, _) = apply_rule(
+        let (ast, stop_index) = apply_rule(
             "expression",
             &tokens,
             0,
             &self.grammar,
         );
+
+        if stop_index > 0 {
+            if stop_index < tokens.len() - 1 {
+                println!("Warning > Ignoring due to a syntax error at:");
+                println!("    {:?}", tokens[stop_index]);
+                println!("Which is right after:");
+                println!("    {:?}", tokens[stop_index - 1]);
+            }
+        } else if tokens.len() >= 2 {
+            println!("Warning > Ignoring due to a syntax error at:");
+            println!("    {:?}", tokens[stop_index]);
+        } else {
+            return Rc::new(
+                RefCell::new(
+                    Expressions {
+                        values: vec![]
+                    }
+                )
+            );
+        }
 
         if let Some(thing) = ast {
             return Rc::new(

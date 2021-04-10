@@ -79,9 +79,6 @@ fn apply_item<A, T: RepresentableToken>(
         return (None, token_index);
     }
 
-    // println!("=> {:?}", item);
-    // println!("Next: {:?} = {:?}", tokens[token_index].get_type_name(), tokens[token_index].get_value());
-
     let mut moved_token_index = token_index;
 
     if item != "#whitespace" {
@@ -92,13 +89,27 @@ fn apply_item<A, T: RepresentableToken>(
         }
     }
 
-    // println!("Resl: {:?} = {:?}", tokens[moved_token_index].get_type_name(), tokens[moved_token_index].get_value());
-
     if item.starts_with("#") {
-        let token_type = item.chars().skip(1).collect::<String>();
+        let no_hash = item.chars().skip(1).collect::<String>();
+        let mut parts = no_hash.split("!").map(|it| it.to_owned()).collect::<Vec<String>>();
+        let token_type = parts.remove(0);
 
         if tokens[moved_token_index].get_type_name() != token_type {
             return (None, token_index);
+        }
+
+        if !parts.is_empty() {
+            let ignore = parts.remove(0);
+
+            let should_ignore = if let Some(thing) = tokens[moved_token_index].get_value() {
+                ignore.contains(thing)
+            } else {
+                false
+            };
+
+            if should_ignore {
+                return (None, token_index);
+            }
         }
 
         return (
