@@ -59,7 +59,7 @@ impl StdinStream {
 
 impl Stream<Option<char>> for StdinStream {
     fn has_next(&self) -> bool {
-        return self.next >= self.buffer.len();
+        return self.next < self.buffer.len() || self.should_read;
     }
 
     fn get_offset(&self) -> usize {

@@ -59,7 +59,7 @@ impl <T: BufRead> WrapperStream<T> {
 
 impl <T: BufRead> Stream<Option<char>> for WrapperStream<T> {
     fn has_next(&self) -> bool {
-        return self.next >= self.buffer.len();
+        return self.next < self.buffer.len() || self.should_read;
     }
 
     fn get_offset(&self) -> usize {

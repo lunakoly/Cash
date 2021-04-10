@@ -1,24 +1,41 @@
+use helpers::{elvis, some_or};
+
+/// A Token that's value can be turned
+/// into a string, and that has a
+/// string-representable type.
 pub trait RepresentableToken {
     fn get_type_name(&self) -> String;
     fn get_value(&self) -> Option<&str>;
 }
 
+/// A single branch of a rule with
+/// a pattern and a handler called if
+/// that pattern is met.
 pub struct Branch<'a, A> {
     pub pattern: Vec<&'static str>,
     pub handler: &'a dyn Fn(Vec<A>) -> A
 }
 
+/// A rule for an entity. It may
+/// have multiple branches, and some
+/// may be left-recurrent (`recursive_branches`).
 pub struct Rule<'a, A> {
     pub name: &'static str,
     pub simple_branches: Vec<Branch<'a, A>>,
     pub recursive_branches: Vec<Branch<'a, A>>,
 }
 
+/// A collection of rules for all entities
+/// along with a function for turning tokens
+/// into the corresponding node.
 pub struct Grammar<'a, A, T: RepresentableToken> {
     pub handle_token: &'a dyn Fn(&T) -> A,
     pub rules: Vec<Rule<'a, A>>,
 }
 
+/// Returns a reference to
+/// a rule for the given entity or
+/// None if there's no such a rule.
 fn get_rule_by_name<'a, A>(
     rules: &'a Vec<Rule<'a, A>>, name: &str
 ) -> Option<&'a Rule<'a, A>> {
@@ -31,6 +48,8 @@ fn get_rule_by_name<'a, A>(
     return None;
 }
 
+/// Checks the next token
+/// against the proper rule.
 fn apply_item<A, T: RepresentableToken>(
     item: &str,
     tokens: &[T],
@@ -49,14 +68,14 @@ fn apply_item<A, T: RepresentableToken>(
     if item.starts_with("#") {
         let token_type = item.chars().skip(1).collect::<String>();
 
-        if tokens[token_index].get_type_name() == token_type {
-            return (
-                Some((grammar.handle_token)(&tokens[token_index])),
-                token_index + 1
-            );
+        if tokens[token_index].get_type_name() != token_type {
+            return (None, token_index);
         }
 
-        return (None, token_index);
+        return (
+            Some((grammar.handle_token)(&tokens[token_index])),
+            token_index + 1
+        );
     }
 
     if Some(item) == tokens[token_index].get_value() {
@@ -69,6 +88,8 @@ fn apply_item<A, T: RepresentableToken>(
     return (None, token_index);
 }
 
+/// Checks the next token
+/// agains the specified branch.
 fn apply_branch<A, T: RepresentableToken>(
     branch: &Branch<A>,
     pattern_item_index: usize,
@@ -98,75 +119,85 @@ fn apply_branch<A, T: RepresentableToken>(
     return (Some(values), moved_token_index);
 }
 
+/// Checks the next token agains
+/// a simple rule (non left-recurrent).
 fn apply_simple_rule<A, T: RepresentableToken>(
     rule_name: &str,
     tokens: &[T],
     token_index: usize,
     grammar: &Grammar<A, T>,
 ) -> (Option<A>, usize) {
-    if let Some(rule) = get_rule_by_name(&grammar.rules, rule_name) {
-        for branch in &rule.simple_branches {
-            let (values, new_token_index) = apply_branch(
-                branch,
-                0,
-                tokens,
-                token_index,
-                grammar,
-            );
+    let rule = some_or! {
+        get_rule_by_name(&grammar.rules, rule_name) =>
+        return (None, token_index)
+    };
 
-            if let Some(values) = values {
-                return (Some((branch.handler)(values)), new_token_index);
-            }
+    for branch in &rule.simple_branches {
+        let (values, new_token_index) = apply_branch(
+            branch,
+            0,
+            tokens,
+            token_index,
+            grammar,
+        );
+
+        if let Some(values) = values {
+            return (Some((branch.handler)(values)), new_token_index);
         }
     }
 
     return (None, token_index);
 }
 
+/// Checks the next token agains
+/// the specified rule. First cheks 'simple'
+/// rules, then - attempts to apply left-recurrent
+/// rules in a loop.
 pub fn apply_rule<A, T: RepresentableToken>(
     rule_name: &str,
     tokens: &[T],
     token_index: usize,
     grammar: &Grammar<A, T>,
 ) -> (Option<A>, usize) {
-    let (mut result, mut moved_token_index) = apply_simple_rule(
+    let (simple_result, mut moved_token_index) = apply_simple_rule(
         rule_name,
         tokens,
         token_index,
         grammar,
     );
 
-    if let Some(rule) = get_rule_by_name(&grammar.rules, rule_name) {
-        let mut applied = true;
+    let mut result = some_or! {
+        simple_result => return (None, token_index)
+    };
 
-        while applied {
-            applied = false;
+    let rule = some_or! {
+        get_rule_by_name(&grammar.rules, rule_name) =>
+        return (None, token_index)
+    };
 
-            if let Some(mut thing) = result {
-                for branch in &rule.recursive_branches {
-                    let (maybe_values, new_token_index) = apply_branch(
-                        branch,
-                        1,
-                        tokens,
-                        moved_token_index,
-                        grammar,
-                    );
+    let mut applied = true;
 
-                    if let Some(mut values) = maybe_values {
-                        values.insert(0, thing);
-                        thing = (branch.handler)(values);
-                        moved_token_index = new_token_index;
-                        applied = true;
-                        break;
-                    }
-                }
+    while applied {
+        applied = false;
 
-                result = Some(thing);
+        for branch in &rule.recursive_branches {
+            let (maybe_values, new_token_index) = apply_branch(
+                branch,
+                1,
+                tokens,
+                moved_token_index,
+                grammar,
+            );
+
+            if let Some(mut values) = maybe_values {
+                values.insert(0, result);
+                result = (branch.handler)(values);
+                moved_token_index = new_token_index;
+                applied = true;
+                break;
             }
         }
-
-        return (result, moved_token_index);
     }
 
-    return (None, token_index);
+    return (Some(result), moved_token_index);
 }
