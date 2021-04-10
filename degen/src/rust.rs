@@ -35,13 +35,13 @@ pub fn render_struct(name: &str, fields: &[FieldInfo], indent: usize) -> String 
     return render(STRUCT_TEMPLATE, indent, &[name, &pieces.join("\n")]);
 }
 
-const STRUCT_DECLARATION_ONLY_TEMPLATE: &'static str = "
+const STRUCT_DECLARATION_NO_BODY: &'static str = "
     pub struct $$;
 ";
 
 /// Returns the struct representation without the body.
-pub fn render_struct_declaration_only(name: &str, indent: usize) -> String {
-    return render(STRUCT_DECLARATION_ONLY_TEMPLATE, indent, &[name]);
+pub fn render_struct_no_body(name: &str, indent: usize) -> String {
+    return render(STRUCT_DECLARATION_NO_BODY, indent, &[name]);
 }
 
 const TRAIT_TEMPLATE: &'static str = "

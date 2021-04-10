@@ -1,5 +1,5 @@
 [package]
-name = "building"
+name = "frontend"
 version = "0.1.0"
 authors = ["Nick <lunyak.kolya@mail.ru>"]
 edition = "2018"
@@ -8,6 +8,9 @@ edition = "2018"
 
 [dependencies]
 helpers = { path = "../helpers", version = "*" }
+parsing = { path = "../parsing", version = "*"}
+processing = { path = "../processing", version = "*"}
+
+[build-dependencies]
 serde_json = { version = "1.0", features = ["preserve_order"] }
-degen = { path = "../degen", version = "*"}
-Inflector = "*"
+building = { path = "../building", version = "*" }

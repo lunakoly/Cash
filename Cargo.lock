@@ -61,6 +61,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
+name = "backend"
+version = "0.1.0"
+dependencies = [
+ "building",
+ "frontend",
+ "helpers",
+ "parsing",
+ "processing",
+ "serde_json",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -86,6 +98,7 @@ version = "0.1.0"
 dependencies = [
  "Inflector",
  "degen",
+ "helpers",
  "serde_json",
 ]
 
@@ -93,10 +106,14 @@ dependencies = [
 name = "cash"
 version = "0.1.0"
 dependencies = [
+ "backend",
  "building",
+ "ferris-says",
+ "frontend",
+ "helpers",
  "parsing",
  "processing",
- "serde_json",
+ "terminals",
 ]
 
 [[package]]
@@ -116,18 +133,6 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "cherrylog"
-version = "0.1.0"
-dependencies = [
- "building",
- "cash",
- "ferris-says",
- "parsing",
- "processing",
- "terminals",
-]
 
 [[package]]
 name = "clap"
@@ -158,6 +163,7 @@ name = "degen"
 version = "0.1.0"
 dependencies = [
  "Inflector",
+ "helpers",
 ]
 
 [[package]]
@@ -178,6 +184,17 @@ dependencies = [
  "clap",
  "error-chain",
  "smallvec",
+]
+
+[[package]]
+name = "frontend"
+version = "0.1.0"
+dependencies = [
+ "building",
+ "helpers",
+ "parsing",
+ "processing",
+ "serde_json",
 ]
 
 [[package]]
@@ -202,6 +219,10 @@ name = "hashbrown"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
+
+[[package]]
+name = "helpers"
+version = "0.1.0"
 
 [[package]]
 name = "hermit-abi"
@@ -270,6 +291,9 @@ checksum = "4ad167a2f54e832b82dbe003a046280dceffe5227b5f79e08e363a29638cfddd"
 [[package]]
 name = "parsing"
 version = "0.1.0"
+dependencies = [
+ "helpers",
+]
 
 [[package]]
 name = "ppv-lite86"
@@ -281,6 +305,7 @@ checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 name = "processing"
 version = "0.1.0"
 dependencies = [
+ "helpers",
  "tempfile",
 ]
 

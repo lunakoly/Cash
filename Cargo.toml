@@ -1,5 +1,5 @@
 [package]
-name = "cherrylog"
+name = "cash"
 version = "0.1.0"
 authors = ["Nick <lunyak.kolya@mail.ru>"]
 edition = "2018"
@@ -8,7 +8,9 @@ edition = "2018"
 
 [dependencies]
 ferris-says = "0.1"
-cash = { path = "cash", version = "*" }
+helpers = { path = "helpers", version = "*" }
+frontend = { path = "frontend", version = "*" }
+backend = { path = "backend", version = "*" }
 parsing = { path = "parsing", version = "*" }
 processing = { path = "processing", version = "*" }
 terminals = { path = "terminals", version = "*" }

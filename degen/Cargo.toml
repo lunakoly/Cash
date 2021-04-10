@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 Inflector = "*"
+helpers = { path = "../helpers", version = "*" }

@@ -1,5 +1,5 @@
 [package]
-name = "cash"
+name = "backend"
 version = "0.1.0"
 authors = ["Nick <lunyak.kolya@mail.ru>"]
 edition = "2018"
@@ -7,8 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+helpers = { path = "../helpers", version = "*" }
 parsing = { path = "../parsing", version = "*"}
 processing = { path = "../processing", version = "*"}
+frontend = { path = "../frontend", version = "*" }
 
 [build-dependencies]
 serde_json = { version = "1.0", features = ["preserve_order"] }

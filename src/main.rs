@@ -6,9 +6,9 @@ use parsing::stream::{Stream};
 // use parsing::stream::stdin_stream::{StdinStream};
 use parsing::stream::accumulator_stream::{SimpleAccumulatorStream};
 
-use cash::ast::*;
-use cash::lexer::{Lexer};
-use cash::parser::{Parser};
+use frontend::ast::*;
+use frontend::lexer::{Lexer};
+use frontend::parser::{Parser};
 
 // use processing::{launch_pipeline, launch_input_substitution, launch_output_substitution};
 
@@ -16,15 +16,15 @@ use terminals::terminal_stream::TerminalStream;
 
 // use std::fs::File;
 
-use cash::runner::Runner;
+use backend::runner::Runner;
 
-use cash::cast;
-use cash::value;
+use backend::cast;
+use backend::value;
 
 fn test_processing() -> std::io::Result<()> {
     // println!("Testing Processing:");
 
-    // let result = launch_pipeline(
+    // let runner.value = launch_pipeline(
     //     None,
     //     Some(std::process::Stdio::piped()),
     //     &[
@@ -37,7 +37,7 @@ fn test_processing() -> std::io::Result<()> {
     // let input = File::open("E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\a.txt")?;
     // let output = File::create("E:\\Projects\\Other\\rust_sandbox\\processing\\samples\\c.txt")?;
 
-    // let result = launch_pipeline(
+    // let runner.value = launch_pipeline(
     //     Some(input),
     //     Some(output),
     //     &[
@@ -47,7 +47,7 @@ fn test_processing() -> std::io::Result<()> {
     // )?
     //     .wait_with_output()?;
 
-    // let output = String::from_utf8_lossy(&result.stdout);
+    // let output = String::from_utf8_lossy(&runner.value.stdout);
     // println!("Got: {:?}", &output);
     Ok(())
 }
@@ -74,17 +74,17 @@ fn main() {
         let wrapped = parser.grab();
         let mut ast = wrapped.borrow_mut();
 
-        ast.accept_leveled_visitor(&mut cash::ast::ASTPrinter, 0);
+        ast.accept_leveled_visitor(&mut frontend::ast::ASTPrinter, 0);
 
-        let result = ast.accept_runner_visitor_no_body(&mut runner);
+        ast.accept_simple_visitor(&mut runner);
 
-        if let Some(string) = cast!(result => value::string::StringValue) {
+        if let Some(string) = cast!(runner.value => value::string::StringValue) {
             println!("String ::: {:?}", string);
-        } else if let Some(number) = cast!(result => value::number::NumberValue) {
+        } else if let Some(number) = cast!(runner.value => value::number::NumberValue) {
             println!("Number ::: {:?}", number);
-        } else if let Some(boolean) = cast!(result => value::boolean::BooleanValue) {
+        } else if let Some(boolean) = cast!(runner.value => value::boolean::BooleanValue) {
             println!("Boolean ::: {:?}", boolean);
-        } else if let Some(none) = cast!(result => value::none::NoneValue) {
+        } else if let Some(none) = cast!(runner.value => value::none::NoneValue) {
             println!("::: None :::");
         }
 

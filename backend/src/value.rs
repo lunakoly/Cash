@@ -51,6 +51,13 @@ macro_rules! cast {
     };
 }
 
+#[macro_export]
+macro_rules! cast_or {
+    ( $target:expr => $kind:ty => $otherwise:expr ) => {
+        some_or! { cast!($target => $kind) => $otherwise };
+    };
+}
+
 // pub trait Labelable {
 //     fn to<T: 'static + Labeled>(&self) -> Option<&T>;
 // }
