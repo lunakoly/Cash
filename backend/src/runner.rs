@@ -99,7 +99,7 @@ impl SimpleVisitor for Runner {
 
     fn visit_command(&mut self, it: &mut Command) {
         for that in &mut it.arguments {
-            let resolved = with! { self.value => NoneValue::create() => that.accept_simple_visitor(self) };
+            let resolved = with_value! { self => that.accept_simple_visitor(self) };
             self.command.push(resolved);
         }
     }
