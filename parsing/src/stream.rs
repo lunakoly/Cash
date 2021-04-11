@@ -8,7 +8,7 @@ pub mod wrapper_stream;
 
 /// A sequence of some values of
 /// type T.
-pub trait Stream<T: Eq> {
+pub trait Stream<T> {
     /// Returns true if there're some
     /// other values left.
     fn has_next(&self) -> bool;

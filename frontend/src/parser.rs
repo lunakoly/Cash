@@ -15,23 +15,15 @@ use std::cell::RefCell;
 
 use parsing::ruler::RepresentableToken;
 
-impl PartialEq for Expressions {
-    fn eq(&self, other: &Self) -> bool {
-        return self.values.is_empty() && other.values.is_empty();
-    }
-}
-
-impl Eq for Expressions {}
-
 pub struct Parser<'a> {
     pub grammar: Grammar<'a, Box<dyn Node>, Token>,
     pub backend: Liner<'a>,
-    pub last_ast: Rc<RefCell<Expressions>>,
+    pub last_ast: Rc<RefCell<Box<dyn Node>>>,
     pub end_token_met: bool,
 }
 
 impl <'a> Parser<'a> {
-    fn parse(&mut self) -> Rc<RefCell<Expressions>> {
+    fn parse(&mut self) -> Rc<RefCell<Box<dyn Node>>> {
         let tokens = self.backend.grab();
 
         match tokens.first() {
@@ -40,9 +32,11 @@ impl <'a> Parser<'a> {
 
                 return Rc::new(
                     RefCell::new(
-                        Expressions {
-                            values: vec![]
-                        }
+                        Box::new(
+                            Expressions {
+                                values: vec![]
+                            }
+                        )
                     )
                 );
             },
@@ -69,9 +63,11 @@ impl <'a> Parser<'a> {
         } else {
             return Rc::new(
                 RefCell::new(
-                    Expressions {
-                        values: vec![]
-                    }
+                    Box::new(
+                        Expressions {
+                            values: vec![]
+                        }
+                    )
                 )
             );
         }
@@ -79,26 +75,20 @@ impl <'a> Parser<'a> {
         if let Some(thing) = ast {
             return Rc::new(
                 RefCell::new(
-                    Expressions {
-                        values: vec![thing]
-                    }
+                    thing
                 )
             );
         }
 
         return Rc::new(
             RefCell::new(
-                Expressions {
-                    values: vec![
-                        Box::new(
-                            Leaf {
-                                value: Token::Text {
-                                    value: "[error]".to_owned()
-                                }
-                            }
-                        )
-                    ]
-                }
+                Box::new(
+                    Leaf {
+                        value: Token::Text {
+                            value: "[error]".to_owned()
+                        }
+                    }
+                )
             )
         );
     }
@@ -111,9 +101,11 @@ impl <'a> Parser<'a> {
             backend: Liner::<'a>::new(backend),
             last_ast: Rc::new(
                 RefCell::new(
-                    Expressions {
-                        values: vec![]
-                    }
+                    Box::new(
+                        Expressions {
+                            values: vec![]
+                        }
+                    )
                 )
             ),
             end_token_met: false
@@ -121,12 +113,12 @@ impl <'a> Parser<'a> {
     }
 }
 
-impl <'a> Stream<Rc<RefCell<Expressions>>> for Parser<'a> {
+impl <'a> Stream<Rc<RefCell<Box<dyn Node>>>> for Parser<'a> {
     fn has_next(&self) -> bool {
         return !self.end_token_met;
     }
 
-    fn grab(&mut self) -> Rc<RefCell<Expressions>> {
+    fn grab(&mut self) -> Rc<RefCell<Box<dyn Node>>> {
         return self.parse();
     }
 

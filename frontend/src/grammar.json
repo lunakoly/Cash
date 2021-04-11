@@ -109,6 +109,7 @@
         },
         "expressions": {
             "@expressions #newline @expression": "handle_expressions_append",
+            "@expressions ; @expression": "handle_expressions_append",
             "@expression": "handle_expressions_create"
         }
     }
