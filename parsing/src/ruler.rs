@@ -82,6 +82,9 @@ fn apply_item<A, T: RepresentableToken>(
     let mut moved_token_index = token_index;
     let mut next = item.to_owned();
 
+    // println!("=> {:?}", item);
+    // println!("At: {:?} {:?}", tokens[token_index].get_type_name(), tokens[token_index].get_value());
+
     if next.len() > 1 && next.starts_with("*") {
         next = next.chars().skip(1).collect::<String>();
     } else {
@@ -91,6 +94,8 @@ fn apply_item<A, T: RepresentableToken>(
             return (None, token_index);
         }
     }
+
+    // println!("After: {:?} {:?}", tokens[moved_token_index].get_type_name(), tokens[moved_token_index].get_value());
 
     if next.len() > 1 && next.starts_with("#") {
         let no_hash = next.chars().skip(1).collect::<String>();

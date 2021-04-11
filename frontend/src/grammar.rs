@@ -45,7 +45,7 @@ fn handle_token(token: &Token) -> Box<dyn Node> {
 }
 
 fn handle_pass(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
-    if !pattern.is_empty() {
+    if pattern.len() == 1 {
         pattern.remove(0)
     } else {
         create_todo("pass")
@@ -186,65 +186,11 @@ fn handle_text_parts_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     }
 }
 
-fn handle_string_part_text_parts(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_string_pass_middle(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 3 {
         pattern.remove(1)
     } else {
-        create_todo("string_part_text_parts")
-    }
-}
-
-fn handle_string_part_wrap_single_quoted(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
-    if pattern.len() == 3 {
-        Box::new(
-            TextParts {
-                parts: vec![pattern.remove(1)],
-            }
-        )
-    } else {
-        create_todo("string_part_wrap_single_quoted")
-    }
-}
-
-fn handle_string_part_wrap_text(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
-    if pattern.len() == 1 {
-        Box::new(
-            TextParts {
-                parts: vec![
-                    Box::new(
-                        Text {
-                            value: extract_value(pattern.remove(0))
-                        }
-                    )
-                ],
-            }
-        )
-    } else {
-        create_todo("string_part_wrap_text")
-    }
-}
-
-fn handle_string_append_part(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
-    if pattern.len() == 2 {
-        let mut parts_old = pattern.remove(0);
-        let mut parts_new = pattern.remove(0);
-
-        let mut extractor_old = Extractor::new(move |it: &mut TextParts| {
-            let mut extractor_new = Extractor::new(move |that: &mut TextParts| {
-                let parts = std::mem::replace(&mut that.parts, vec![]);
-
-                for part in parts {
-                    it.parts.push(part);
-                }
-            });
-
-            parts_new.accept_simple_visitor(&mut extractor_new);
-        });
-
-        parts_old.accept_simple_visitor(&mut extractor_old);
-        parts_old
-    } else {
-        create_todo("string_append_part")
+        create_todo("string_pass_middle")
     }
 }
 
@@ -273,14 +219,6 @@ fn handle_closure_arguments_create(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn N
         )
     } else {
         create_todo("closure_arguments_create")
-    }
-}
-
-fn handle_leaf_single(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
-    if pattern.len() == 1 {
-        pattern.remove(0)
-    } else {
-        create_todo("leaf_single")
     }
 }
 
@@ -319,6 +257,119 @@ fn handle_leaf_closure_dependent(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Nod
         )
     } else {
         create_todo("leaf_closure_dependent")
+    }
+}
+
+macro_rules! check_node {
+    ( $target:expr, $T:ty ) => {
+        {
+            let mut good = false;
+
+            let mut extractor = Extractor::new(|_it: &mut $T| {
+                good = true;
+            });
+
+            $target.accept_simple_visitor(&mut extractor);
+            good
+        }
+    };
+}
+
+fn handle_leaf_number_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 2 {
+        let mut maybe_parts = pattern.remove(0);
+        let number = pattern.remove(0);
+
+        if check_node!(maybe_parts, TextParts) {
+            let mut extractor = Extractor::new(move |it: &mut TextParts| {
+                it.parts.push(number);
+            });
+
+            maybe_parts.accept_simple_visitor(&mut extractor);
+            return maybe_parts;
+        }
+
+        Box::new(
+            TextParts {
+                parts: vec![maybe_parts, number]
+            }
+        )
+    } else {
+        create_todo("leaf_number_append")
+    }
+}
+
+fn handle_leaf_string_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 2 {
+        let mut maybe_parts1 = pattern.remove(0);
+        let mut maybe_parts2 = pattern.remove(0);
+
+        if check_node!(maybe_parts1, TextParts) {
+            if check_node!(maybe_parts2, TextParts) {
+                let mut extractor1 = Extractor::new(move |it: &mut TextParts| {
+                    let mut extractor2 = Extractor::new(move |that: &mut TextParts| {
+                        let parts = std::mem::replace(&mut that.parts, vec![]);
+
+                        for part in parts {
+                            it.parts.push(part);
+                        }
+                    });
+
+                    maybe_parts2.accept_simple_visitor(&mut extractor2);
+                });
+
+                maybe_parts1.accept_simple_visitor(&mut extractor1);
+                return maybe_parts1;
+            }
+
+            let mut extractor1 = Extractor::new(move |it: &mut TextParts| {
+                it.parts.push(maybe_parts2);
+            });
+
+            maybe_parts1.accept_simple_visitor(&mut extractor1);
+            return maybe_parts1;
+        }
+
+        if check_node!(maybe_parts2, TextParts) {
+            let mut extractor2 = Extractor::new(move |that: &mut TextParts| {
+                that.parts.push(maybe_parts1);
+            });
+
+            maybe_parts2.accept_simple_visitor(&mut extractor2);
+            return maybe_parts2;
+        }
+
+        Box::new(
+            TextParts {
+                parts: vec![maybe_parts1, maybe_parts2],
+            }
+        )
+    } else {
+        create_todo("leaf_number_append")
+    }
+}
+
+fn handle_leaf_substitution_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 4 {
+        let mut maybe_parts = pattern.remove(0);
+        let inner = pattern.remove(1);
+
+        if check_node!(maybe_parts, TextParts) {
+            let mut extractor = Extractor::new(move |it: &mut TextParts| {
+                it.parts.push(inner);
+            });
+
+            maybe_parts.accept_simple_visitor(&mut extractor);
+            return maybe_parts;
+        }
+
+        Box::new(
+            TextParts {
+                parts: vec![maybe_parts, inner]
+            }
+        )
+    } else {
+        create_todo("leaf_substitution_append")
     }
 }
 

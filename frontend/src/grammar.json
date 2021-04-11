@@ -33,26 +33,24 @@
             "*@text_part": "handle_text_parts_create",
             "@text_parts *@text_part": "handle_text_parts_append"
         },
-        "string_part": {
-            "*\" *@text_parts \"": "handle_string_part_text_parts",
-            "*' *@single_quoted_text '": "handle_string_part_wrap_single_quoted",
-            "*#text": "handle_string_part_wrap_text",
-            "*#number": "handle_string_part_wrap_text"
-        },
         "string": {
-            "@string_part": "handle_pass",
-            "@string *@string_part": "handle_string_append_part"
+            "*\" *@text_parts \"": "handle_string_pass_middle",
+            "*' *@single_quoted_text '": "handle_string_pass_middle",
+            "*#text": "handle_pass"
         },
         "closure_arguments": {
             "@closure_arguments , @string": "handle_closure_arguments_append",
             "@string": "handle_closure_arguments_create"
         },
         "leaf": {
-            "#number": "handle_leaf_single",
-            "@string": "handle_pass",
-            "( @expression )": "handle_leaf_substitution",
-            "{ @expressions }": "handle_leaf_closure_independent",
-            "{ @closure_arguments - > @expressions }": "handle_leaf_closure_dependent"
+            "*#number": "handle_pass",
+            "*@string": "handle_pass",
+            "*( @expression )": "handle_leaf_substitution",
+            "*{ @expressions }": "handle_leaf_closure_independent",
+            "*{ @closure_arguments - > @expressions }": "handle_leaf_closure_dependent",
+            "@leaf *#number": "handle_leaf_number_append",
+            "@leaf *@string": "handle_leaf_string_append",
+            "@leaf *( @expression )": "handle_leaf_substitution_append"
         },
         "command": {
             "@command @leaf": "handle_command_append",
