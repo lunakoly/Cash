@@ -226,7 +226,6 @@ impl <'a> Lexer<'a> {
         }
 
         if self.backend.accept('\\') {
-            self.backend.step();
             return self.read_escape();
         }
 
