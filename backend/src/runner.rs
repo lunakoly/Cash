@@ -256,8 +256,4 @@ impl SimpleVisitor for Runner {
 
         self.value = ClosureValue::create(arguments, body);
     }
-
-    fn visit_file(&mut self, _it: &mut File) {
-        self.value = create_todo("visit_file")
-    }
 }
