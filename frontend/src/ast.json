@@ -1,16 +1,14 @@
 {
     "nodes": {
+        "Number": {
+            "value": "String",
+            "base": "u8"
+        },
         "Text": {
             "value": "String"
         },
         "TextParts": {
             "parts": "Vec<Box<dyn Node>>"
-        },
-        "List": {
-            "values": "Vec<Box<dyn Node>>"
-        },
-        "Leaf": {
-            "value": "Token"
         },
         "Command": {
             "arguments": "Vec<Box<dyn Node>>"
@@ -26,6 +24,9 @@
             "lefter": "Box<dyn Node>",
             "operator": "Box<dyn Node>",
             "righter": "Box<dyn Node>"
+        },
+        "ClosureArguments": {
+            "values": "Vec<Box<dyn Node>>"
         },
         "Expressions": {
             "values": "Vec<Box<dyn Node>>"

@@ -49,6 +49,7 @@ impl RepresentableToken for Token {
             Token::Delimiter { value } => Some(value),
             Token::Number { value, .. } => Some(value),
             Token::Text { value } => Some(value),
+            Token::Whitespace { value } => Some(value),
             _ => None,
         }
     }

@@ -81,10 +81,8 @@ impl <'a> Parser<'a> {
         return Rc::new(
             RefCell::new(
                 Box::new(
-                    Leaf {
-                        value: Token::Text {
-                            value: "[error]".to_owned()
-                        }
+                    Text {
+                        value: "[error]".to_owned()
                     }
                 )
             )

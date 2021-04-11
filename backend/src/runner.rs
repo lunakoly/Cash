@@ -61,6 +61,18 @@ fn create_todo(location: &str) -> Box<dyn Value> {
 }
 
 impl SimpleVisitor for Runner {
+    fn visit_number(&mut self, it: &mut Number) {
+        let mut result = 0;
+        let mut shift = 1;
+
+        for that in it.value.bytes().rev() {
+            result += ((that - '0' as u8) as i32) * shift;
+            shift *= it.base as i32;
+        }
+
+        self.value = NumberValue::create(result);
+    }
+
     fn visit_text(&mut self, it: &mut Text) {
         self.value = StringValue::create(&it.value);
     }
@@ -74,43 +86,6 @@ impl SimpleVisitor for Runner {
         }
 
         self.value = StringValue::create(&result);
-    }
-
-	fn visit_list(&mut self, _it: &mut List) {
-        self.value = create_todo("visit_list")
-    }
-
-	fn visit_leaf(&mut self, it: &mut Leaf) {
-        self.value = match &it.value {
-            Token::Operator { value } => {
-                StringValue::create(&value)
-            },
-            Token::Delimiter { value } => {
-                StringValue::create(&value)
-            },
-            Token::Text { value } => {
-                match &**value {
-                    "None" => NoneValue::create(),
-                    "True" => BooleanValue::create(true),
-                    "False" => BooleanValue::create(false),
-                    _ => StringValue::create(&value)
-                }
-            },
-            Token::Number { value, base } => {
-                let mut result = 0;
-                let mut shift = 1;
-
-                for that in value.bytes().rev() {
-                    result += ((that - '0' as u8) as i32) * shift;
-                    shift *= *base as i32;
-                }
-
-                NumberValue::create(result)
-            },
-            _ => {
-                NoneValue::create()
-            }
-        }
     }
 
     fn visit_command(&mut self, it: &mut Command) {
@@ -219,6 +194,10 @@ impl SimpleVisitor for Runner {
         }
     }
 
+    fn visit_closure_arguments(&mut self, _it: &mut ClosureArguments) {
+        self.value = create_todo("closure_arguments")
+    }
+
     fn visit_expressions(&mut self, it: &mut Expressions) {
         let mut last: Option<Box<dyn Value>> = None;
 
@@ -239,7 +218,7 @@ impl SimpleVisitor for Runner {
         let arguments = std::mem::replace(
             &mut it.arguments,
             Box::new(
-                List {
+                ClosureArguments {
                     values: vec![],
                 }
             )

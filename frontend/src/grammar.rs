@@ -5,22 +5,43 @@ use crate::lexer::Token;
 use crate::ast::*;
 use crate::ast::nodes::*;
 
+use helpers::{elvis, some_or};
+
+use parsing::ruler::RepresentableToken;
+
 fn create_todo(location: &str) -> Box<dyn Node> {
     Box::new(
-        Leaf {
-            value: Token::Text {
-               value: "[todo:".to_owned() + location + "]"
-            }
+        Text {
+            value: "[todo:".to_owned() + location + "]"
         }
     )
 }
 
 fn handle_token(token: &Token) -> Box<dyn Node> {
-    Box::new(
-        Leaf {
-            value: token.clone()
+    match token {
+        Token::Number { value, base } => {
+            Box::new(
+                Number {
+                    value: value.clone(),
+                    base: *base,
+                }
+            )
         }
-    )
+        Token::Text { value } => {
+            Box::new(
+                Text {
+                    value: value.clone()
+                }
+            )
+        }
+        _ => {
+            Box::new(
+                Text {
+                    value: some_or! { token.get_value() => "" }.to_owned()
+                }
+            )
+        }
+    }
 }
 
 fn handle_pass(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
@@ -61,15 +82,8 @@ fn handle_binary(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
 fn extract_value(mut target: Box<dyn Node>) -> String {
     let mut result = String::new();
 
-    let mut extractor = Extractor::new(|it: &mut Leaf| {
-        result += match &it.value {
-            Token::Operator { value } => &value,
-            Token::Delimiter { value } => &value,
-            Token::Number { value, .. } => &value,
-            Token::Text { value } => &value,
-            Token::Whitespace { value } => &value,
-            _ => "",
-        };
+    let mut extractor = Extractor::new(|it: &mut Number| {
+        result += &it.value;
     });
 
     target.accept_simple_visitor(&mut extractor);
@@ -97,10 +111,8 @@ fn handle_binary_long(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
             Binary {
                 lefter: lefter,
                 operator: Box::new(
-                    Leaf {
-                        value: Token::Operator {
-                            value: extract_value(operator1) + &extract_value(operator2)
-                        }
+                    Text {
+                        value: extract_value(operator1) + &extract_value(operator2)
                     }
                 ),
                 righter: righter,
@@ -236,31 +248,31 @@ fn handle_string_append_part(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     }
 }
 
-fn handle_strings_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_closure_arguments_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 3 {
         let mut list = pattern.remove(0);
         let element = pattern.remove(1); // skipping the operator
 
-        let mut extractor = Extractor::new(move |it: &mut List| {
+        let mut extractor = Extractor::new(move |it: &mut ClosureArguments| {
             it.values.push(element);
         });
 
         list.accept_simple_visitor(&mut extractor);
         list
     } else {
-        create_todo("strings_append")
+        create_todo("closure_arguments_append")
     }
 }
 
-fn handle_strings_create(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_closure_arguments_create(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 1 {
         Box::new(
-            List {
+            ClosureArguments {
                 values: vec![pattern.remove(0)]
             }
         )
     } else {
-        create_todo("strings_create")
+        create_todo("closure_arguments_create")
     }
 }
 
@@ -285,7 +297,7 @@ fn handle_leaf_closure_independent(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn N
         Box::new(
             Closure {
                 arguments: Box::new(
-                    List {
+                    ClosureArguments {
                         values: vec![]
                     }
                 ),
