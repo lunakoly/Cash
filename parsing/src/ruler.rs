@@ -80,8 +80,11 @@ fn apply_item<A, T: RepresentableToken>(
     }
 
     let mut moved_token_index = token_index;
+    let mut next = item.to_owned();
 
-    if item != "#whitespace" {
+    if next.len() > 1 && next.starts_with("*") {
+        next = next.chars().skip(1).collect::<String>();
+    } else {
         moved_token_index = skip_whitespaces(tokens, moved_token_index);
 
         if moved_token_index >= tokens.len() {
@@ -89,8 +92,8 @@ fn apply_item<A, T: RepresentableToken>(
         }
     }
 
-    if item.starts_with("#") {
-        let no_hash = item.chars().skip(1).collect::<String>();
+    if next.len() > 1 && next.starts_with("#") {
+        let no_hash = next.chars().skip(1).collect::<String>();
         let mut parts = no_hash.split("!").map(|it| it.to_owned()).collect::<Vec<String>>();
         let token_type = parts.remove(0);
 
@@ -118,12 +121,12 @@ fn apply_item<A, T: RepresentableToken>(
         );
     }
 
-    if item.len() > 1 && item.starts_with("@") {
-        let rule_name = item.chars().skip(1).collect::<String>();
+    if next.len() > 1 && next.starts_with("@") {
+        let rule_name = next.chars().skip(1).collect::<String>();
         return apply_rule(&rule_name, tokens, moved_token_index, grammar);
     }
 
-    if Some(item) == tokens[moved_token_index].get_value() {
+    if Some(&*next) == tokens[moved_token_index].get_value() {
         return (
             Some((grammar.handle_token)(&tokens[moved_token_index])),
             moved_token_index + 1

@@ -2,41 +2,46 @@
     "handle_token": "handle_token",
     "rules": {
         "double_quoted_text": {
-            "#whitespace": "handle_text_create",
+            "*#whitespace": "handle_text_create",
             "#text": "handle_text_create",
             "#operator": "handle_text_create",
             "#delimiter!\"(": "handle_text_create",
             "#number": "handle_text_create",
-            "@double_quoted_text #whitespace": "handle_text_append",
+            "@double_quoted_text *#whitespace": "handle_text_append",
             "@double_quoted_text #text": "handle_text_append",
             "@double_quoted_text #operator": "handle_text_append",
             "@double_quoted_text #delimiter!\"(": "handle_text_append",
             "@double_quoted_text #number": "handle_text_append"
         },
         "single_quoted_text": {
-            "#whitespace": "handle_text_create",
+            "*#whitespace": "handle_text_create",
             "#text": "handle_text_create",
             "#operator": "handle_text_create",
             "#delimiter!'": "handle_text_create",
             "#number": "handle_text_create",
-            "@single_quoted_text #whitespace": "handle_text_append",
+            "@single_quoted_text *#whitespace": "handle_text_append",
             "@single_quoted_text #text": "handle_text_append",
             "@single_quoted_text #operator": "handle_text_append",
             "@single_quoted_text #delimiter!'": "handle_text_append",
             "@single_quoted_text #number": "handle_text_append"
         },
         "text_part": {
-            "( @expression )": "handle_text_part_substitution",
-            "@double_quoted_text": "handle_pass"
+            "*( @expression )": "handle_text_part_substitution",
+            "*@double_quoted_text": "handle_pass"
         },
         "text_parts": {
-            "@text_part": "handle_text_parts_create",
-            "@text_parts @text_part": "handle_text_parts_append"
+            "*@text_part": "handle_text_parts_create",
+            "@text_parts *@text_part": "handle_text_parts_append"
+        },
+        "string_part": {
+            "*\" *@text_parts \"": "handle_string_part_text_parts",
+            "*' *@single_quoted_text '": "handle_string_part_wrap_single_quoted",
+            "*#text": "handle_string_part_wrap_text",
+            "*#number": "handle_string_part_wrap_text"
         },
         "string": {
-            "\" @text_parts \"": "handle_string_create",
-            "' @single_quoted_text '": "handle_string_create",
-            "#text": "handle_string_create_implicit"
+            "@string_part": "handle_pass",
+            "@string *@string_part": "handle_string_append_part"
         },
         "strings": {
             "@strings , @string": "handle_strings_append",

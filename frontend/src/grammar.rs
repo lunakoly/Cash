@@ -174,19 +174,65 @@ fn handle_text_parts_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     }
 }
 
-fn handle_string_create(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_string_part_text_parts(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 3 {
         pattern.remove(1)
     } else {
-        create_todo("string_create")
+        create_todo("string_part_text_parts")
     }
 }
 
-fn handle_string_create_implicit(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
-    if pattern.len() == 1 {
-        pattern.remove(0)
+fn handle_string_part_wrap_single_quoted(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 3 {
+        Box::new(
+            TextParts {
+                parts: vec![pattern.remove(1)],
+            }
+        )
     } else {
-        create_todo("string_create_implicit")
+        create_todo("string_part_wrap_single_quoted")
+    }
+}
+
+fn handle_string_part_wrap_text(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 1 {
+        Box::new(
+            TextParts {
+                parts: vec![
+                    Box::new(
+                        Text {
+                            value: extract_value(pattern.remove(0))
+                        }
+                    )
+                ],
+            }
+        )
+    } else {
+        create_todo("string_part_wrap_text")
+    }
+}
+
+fn handle_string_append_part(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 2 {
+        let mut parts_old = pattern.remove(0);
+        let mut parts_new = pattern.remove(0);
+
+        let mut extractor_old = Extractor::new(move |it: &mut TextParts| {
+            let mut extractor_new = Extractor::new(move |that: &mut TextParts| {
+                let parts = std::mem::replace(&mut that.parts, vec![]);
+
+                for part in parts {
+                    it.parts.push(part);
+                }
+            });
+
+            parts_new.accept_simple_visitor(&mut extractor_new);
+        });
+
+        parts_old.accept_simple_visitor(&mut extractor_old);
+        parts_old
+    } else {
+        create_todo("string_append_part")
     }
 }
 
