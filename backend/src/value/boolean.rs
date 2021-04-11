@@ -34,6 +34,10 @@ impl Value for BooleanValue {
         self
     }
 
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
     fn get_type_name(&self) -> &'static str {
         BOOLEAN_TYPE
     }

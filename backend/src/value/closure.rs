@@ -1,29 +1,69 @@
 use crate::value::*;
-use crate::value::boolean::BooleanValue;
+use crate::value::none::NoneValue;
 use crate::value::number::NumberValue;
+use crate::value::boolean::BooleanValue;
 
-pub const NONE_TYPE: &'static str = "NoneType";
+use frontend::ast::*;
 
-#[derive(Clone, Debug)]
-pub struct NoneValue {}
+pub const CLOSURE_TYPE: &'static str = "Closure";
 
-impl NoneValue {
-    pub fn new() -> NoneValue {
-        NoneValue {}
-    }
+pub struct ClosureValue {
+    pub arguments: Box<dyn Node>,
+    pub body: Box<dyn Node>,
+}
 
-    pub fn create() -> Box<NoneValue> {
-        Box::new(NoneValue::new())
+// impl Clone for ClosureValue {
+//     fn clone(&self) -> Self {
+//         ClosureValue::new(
+//             Box::new(
+//                 List {
+//                     values: vec![],
+//                 }
+//             ),
+//             Box::new(
+//                 Expressions {
+//                     values: vec![],
+//                 }
+//             )
+//         )
+//     }
+// }
+
+impl Debug for ClosureValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ClosureValue")
+            .field("arguments", &"[some ast]".to_owned())
+            .field("body", &"[some ast]".to_owned())
+            .finish()
     }
 }
 
-impl Labeled for NoneValue {
+impl ClosureValue {
+    pub fn new(
+        arguments: Box<dyn Node>,
+        body: Box<dyn Node>,
+    ) -> ClosureValue {
+        ClosureValue {
+            arguments: arguments,
+            body: body,
+        }
+    }
+
+    pub fn create(
+        arguments: Box<dyn Node>,
+        body: Box<dyn Node>,
+    ) -> Box<ClosureValue> {
+        Box::new(ClosureValue::new(arguments, body))
+    }
+}
+
+impl Labeled for ClosureValue {
     fn get_type_name() -> &'static str {
-        NONE_TYPE
+        CLOSURE_TYPE
     }
 }
 
-impl Value for NoneValue {
+impl Value for ClosureValue {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -33,11 +73,11 @@ impl Value for NoneValue {
     }
 
     fn get_type_name(&self) -> &'static str {
-        NONE_TYPE
+        CLOSURE_TYPE
     }
 
     fn to_string(&self) -> String {
-        "None".to_owned()
+        return "[closure]".to_owned();
     }
 
     fn get(&self, _subscripts: &[Box<dyn Value>]) -> Box<dyn Value> {
@@ -88,11 +128,8 @@ impl Value for NoneValue {
         BooleanValue::create(false)
     }
 
-    fn equals(&self, other: Box<dyn Value>) -> Box<BooleanValue> {
-        BooleanValue::create(
-            other.get_type_name() == NONE_TYPE &&
-            other.to_string() == "None"
-        )
+    fn equals(&self, _other: Box<dyn Value>) -> Box<BooleanValue> {
+        BooleanValue::create(false)
     }
 
     fn compare(&self, _other: Box<dyn Value>) -> Box<NumberValue> {

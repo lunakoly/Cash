@@ -13,8 +13,6 @@ use crate::grammar::{get_grammar};
 use std::rc::Rc;
 use std::cell::RefCell;
 
-use parsing::ruler::RepresentableToken;
-
 pub struct Parser<'a> {
     pub grammar: Grammar<'a, Box<dyn Node>, Token>,
     pub backend: Liner<'a>,

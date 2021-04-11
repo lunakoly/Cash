@@ -89,6 +89,8 @@ fn main() {
             println!("::: {:?} :::", number);
         } else if let Some(boolean) = cast!(runner.value => value::boolean::BooleanValue) {
             println!("::: {:?} :::", boolean);
+        } else if let Some(closure) = cast!(runner.value => value::closure::ClosureValue) {
+            println!("::: {:?} :::", closure);
         } else if let Some(none) = cast!(runner.value => value::none::NoneValue) {
             println!("::: {:?} :::", none);
         }

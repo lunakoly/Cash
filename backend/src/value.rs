@@ -2,6 +2,7 @@ pub mod none;
 pub mod boolean;
 pub mod number;
 pub mod string;
+pub mod closure;
 
 use std::fmt::Debug;
 
@@ -10,12 +11,15 @@ use std::any::Any;
 use boolean::BooleanValue;
 use number::NumberValue;
 
+// use helpers::{elvis, some_or};
+
 pub trait Labeled {
     fn get_type_name() -> &'static str;
 }
 
 pub trait Value : Debug {
     fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 
     fn get_type_name(&self) -> &'static str;
     fn to_string(&self) -> String;
@@ -52,11 +56,20 @@ macro_rules! cast {
 }
 
 #[macro_export]
-macro_rules! cast_or {
-    ( $target:expr => $kind:ty => $otherwise:expr ) => {
-        some_or! { cast!($target => $kind) => $otherwise };
+macro_rules! cast_mut {
+    ( $target:expr => $kind:ty ) => {
+        {
+            $target.as_any_mut().downcast_mut::<$kind>()
+        }
     };
 }
+
+// #[macro_export]
+// macro_rules! cast_or {
+//     ( $target:expr => $kind:ty => $otherwise:expr ) => {
+//         some_or! { cast!($target => $kind) => $otherwise };
+//     };
+// }
 
 // pub trait Labelable {
 //     fn to<T: 'static + Labeled>(&self) -> Option<&T>;

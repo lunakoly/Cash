@@ -6,6 +6,7 @@ use crate::value::none::NoneValue;
 use crate::value::number::NumberValue;
 use crate::value::boolean::BooleanValue;
 use crate::value::string::StringValue;
+use crate::value::closure::ClosureValue;
 
 use processing::launch_pipeline;
 
@@ -13,7 +14,7 @@ use std::fs;
 
 use frontend::lexer::Token;
 
-use crate::{cast};
+use crate::{cast, cast_mut};
 
 use helpers::{elvis, result_or};
 
@@ -75,7 +76,7 @@ impl SimpleVisitor for Runner {
         self.value = StringValue::create(&result);
     }
 
-	fn visit_list(&mut self, it: &mut List) {
+	fn visit_list(&mut self, _it: &mut List) {
         self.value = create_todo("visit_list")
     }
 
@@ -148,6 +149,11 @@ impl SimpleVisitor for Runner {
                 } else {
                     NoneValue::create()
                 };
+                return;
+            }
+
+            if let Some(closure) = cast_mut!(&mut command[0] => ClosureValue) {
+                self.value = with_value! { self => closure.body.accept_simple_visitor(self) };
                 return;
             }
 
@@ -228,10 +234,30 @@ impl SimpleVisitor for Runner {
     }
 
     fn visit_closure(&mut self, it: &mut Closure) {
-        self.value = create_todo("visit_closure")
+        // don't process closure until it's called
+
+        let arguments = std::mem::replace(
+            &mut it.arguments,
+            Box::new(
+                List {
+                    values: vec![],
+                }
+            )
+        );
+
+        let body = std::mem::replace(
+            &mut it.body,
+            Box::new(
+                Expressions {
+                    values: vec![],
+                }
+            )
+        );
+
+        self.value = ClosureValue::create(arguments, body);
     }
 
-    fn visit_file(&mut self, it: &mut File) {
+    fn visit_file(&mut self, _it: &mut File) {
         self.value = create_todo("visit_file")
     }
 }
