@@ -7,13 +7,11 @@
             "#operator": "handle_text_create",
             "#delimiter!\"(": "handle_text_create",
             "#number": "handle_text_create",
-            "#newline": "handle_text_create",
             "@double_quoted_text #whitespace": "handle_text_append",
             "@double_quoted_text #text": "handle_text_append",
             "@double_quoted_text #operator": "handle_text_append",
             "@double_quoted_text #delimiter!\"(": "handle_text_append",
-            "@double_quoted_text #number": "handle_text_append",
-            "@double_quoted_text #newline": "handle_text_append"
+            "@double_quoted_text #number": "handle_text_append"
         },
         "single_quoted_text": {
             "#whitespace": "handle_text_create",
@@ -21,13 +19,11 @@
             "#operator": "handle_text_create",
             "#delimiter!'": "handle_text_create",
             "#number": "handle_text_create",
-            "#newline": "handle_text_create",
             "@single_quoted_text #whitespace": "handle_text_append",
             "@single_quoted_text #text": "handle_text_append",
             "@single_quoted_text #operator": "handle_text_append",
             "@single_quoted_text #delimiter!'": "handle_text_append",
-            "@single_quoted_text #number": "handle_text_append",
-            "@double_quoted_text #newline": "handle_text_append"
+            "@single_quoted_text #number": "handle_text_append"
         },
         "text_part": {
             "( @expression )": "handle_text_part_substitution",
