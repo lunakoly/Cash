@@ -139,24 +139,34 @@ impl SimpleVisitor for Runner {
                 return;
             }
 
-            if let Some(closure) = cast_mut!(&mut command[0] => ClosureValue) {
-                let mut data = closure.data.borrow_mut();
+            // if let Some(closure) = cast_mut!(&mut command[0] => ClosureValue) {
+            //     let mut data = closure.data.borrow_mut();
 
-                with_scope! { ScopeValue::create(data.scope.clone()), self =>
-                    self.value = with_value! { self =>
-                        data.body.accept_simple_visitor(self)
-                    }
-                };
-                return;
-            }
+            //     with_scope! { ScopeValue::create(data.scope.clone()), self =>
+            //         self.value = with_value! { self =>
+            //             data.body.accept_simple_visitor(self)
+            //         }
+            //     };
+            //     return;
+            // }
 
             if let None = cast!(&command[0] => StringValue) {
                 self.value = command.remove(0);
                 return;
             }
 
-            if let Some(value) = self.scope.get_value(&command[0].to_string()) {
-                self.value = value;
+            if let Some(mut value) = self.scope.get_value(&command[0].to_string()) {
+                if let Some(closure) = cast_mut!(value => ClosureValue) {
+                    let mut data = closure.data.borrow_mut();
+
+                    with_scope! { ScopeValue::create(data.scope.clone()), self =>
+                        self.value = with_value! { self =>
+                            data.body.accept_simple_visitor(self)
+                        }
+                    };
+                } else {
+                    self.value = value;
+                }
                 return;
             }
 
