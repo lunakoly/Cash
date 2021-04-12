@@ -222,15 +222,15 @@ fn handle_closure_arguments_create(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn N
     }
 }
 
-fn handle_leaf_substitution(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_item_substitution(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 3 {
         pattern.remove(1)
     } else {
-        create_todo("leaf_substitution")
+        create_todo("item_substitution")
     }
 }
 
-fn handle_leaf_closure_independent(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_item_closure_independent(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 3 {
         Box::new(
             Closure {
@@ -243,11 +243,11 @@ fn handle_leaf_closure_independent(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn N
             }
         )
     } else {
-        create_todo("leaf_closure_independent")
+        create_todo("item_closure_independent")
     }
 }
 
-fn handle_leaf_closure_dependent(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_item_closure_dependent(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 6 {
         Box::new(
             Closure {
@@ -256,7 +256,7 @@ fn handle_leaf_closure_dependent(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Nod
             }
         )
     } else {
-        create_todo("leaf_closure_dependent")
+        create_todo("item_closure_dependent")
     }
 }
 
@@ -275,7 +275,7 @@ macro_rules! check_node {
     };
 }
 
-fn handle_leaf_number_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_item_number_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 2 {
         let mut maybe_parts = pattern.remove(0);
         let number = pattern.remove(0);
@@ -295,11 +295,11 @@ fn handle_leaf_number_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
             }
         )
     } else {
-        create_todo("leaf_number_append")
+        create_todo("item_number_append")
     }
 }
 
-fn handle_leaf_string_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_item_string_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 2 {
         let mut maybe_parts1 = pattern.remove(0);
         let mut maybe_parts2 = pattern.remove(0);
@@ -345,11 +345,11 @@ fn handle_leaf_string_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
             }
         )
     } else {
-        create_todo("leaf_number_append")
+        create_todo("item_number_append")
     }
 }
 
-fn handle_leaf_substitution_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_item_substitution_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 4 {
         let mut maybe_parts = pattern.remove(0);
         let inner = pattern.remove(1);
@@ -369,7 +369,7 @@ fn handle_leaf_substitution_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn N
             }
         )
     } else {
-        create_todo("leaf_substitution_append")
+        create_todo("item_substitution_append")
     }
 }
 

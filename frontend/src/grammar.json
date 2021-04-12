@@ -42,19 +42,19 @@
             "@closure_arguments , @string": "handle_closure_arguments_append",
             "@string": "handle_closure_arguments_create"
         },
-        "leaf": {
+        "item": {
             "*#number": "handle_pass",
             "*@string": "handle_pass",
-            "*( @expression )": "handle_leaf_substitution",
-            "*{ @expressions }": "handle_leaf_closure_independent",
-            "*{ @closure_arguments - > @expressions }": "handle_leaf_closure_dependent",
-            "@leaf *#number": "handle_leaf_number_append",
-            "@leaf *@string": "handle_leaf_string_append",
-            "@leaf *( @expression )": "handle_leaf_substitution_append"
+            "*( @expression )": "handle_item_substitution",
+            "*{ @expressions }": "handle_item_closure_independent",
+            "*{ @closure_arguments - > @expressions }": "handle_item_closure_dependent",
+            "@item *#number": "handle_item_number_append",
+            "@item *@string": "handle_item_string_append",
+            "@item *( @expression )": "handle_item_substitution_append"
         },
         "command": {
-            "@command @leaf": "handle_command_append",
-            "@leaf": "handle_command_create"
+            "@command @item": "handle_command_append",
+            "@item": "handle_command_create"
         },
         "pipeline": {
             "@pipeline | @command": "handle_pipeline_append",
