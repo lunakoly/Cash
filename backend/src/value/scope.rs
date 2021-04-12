@@ -11,6 +11,10 @@ use crate::value::string::StringValue;
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use helpers::{elvis, some_or};
+
+use crate::{cast_mut};
+
 pub struct ScopeData {
     pub parent: Option<Rc<RefCell<ScopeData>>>,
     pub properties: HashMap<String, Box<dyn Value>>,
@@ -101,6 +105,31 @@ impl ScopeValue {
     pub fn set_value(&mut self, name: &str, value: Box<dyn Value>) {
         let mut data = self.data.borrow_mut();
         data.set_value(name, value);
+    }
+
+    pub fn resolve_parts(&mut self, parts: &[String]) -> Option<Box<dyn Value>> {
+        if parts.is_empty() {
+            return None;
+        }
+
+        let mut result = some_or! { self.get_value(&parts[0]) => return None };
+
+        for it in parts.iter().skip(1) {
+            if let Some(scope) = cast_mut!(result => ScopeValue) {
+                result = some_or! { scope.get_value(it) => return None };
+            } else {
+                return None;
+            }
+        }
+
+        return Some(result);
+    }
+
+    pub fn resolve(&mut self, qualified_name: &str) -> Option<Box<dyn Value>> {
+        let parts = qualified_name.split(".")
+            .map(|it| it.to_owned())
+            .collect::<Vec<String>>();
+        return self.resolve_parts(&parts);
     }
 }
 

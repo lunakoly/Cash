@@ -373,6 +373,19 @@ fn handle_item_substitution_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn N
     }
 }
 
+// fn handle_accessor(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+//     if pattern.len() == 3 {
+//         Box::new(
+//             Accessor {
+//                 target: pattern.remove(0),
+//                 inner: pattern.remove(1), // skipping the operator
+//             }
+//         )
+//     } else {
+//         create_todo("accessor")
+//     }
+// }
+
 fn handle_command_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 2 {
         let mut command = pattern.remove(0);

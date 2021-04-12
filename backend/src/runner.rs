@@ -17,7 +17,7 @@ use frontend::lexer::Token;
 
 use crate::{cast, cast_mut};
 
-use helpers::{elvis, result_or};
+use helpers::{elvis, result_or, some_or};
 
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -27,6 +27,7 @@ pub struct Runner {
     pub command: Vec<Box<dyn Value>>,
     pub should_exit: bool,
     pub scope: Box<ScopeValue>,
+    pub closure_arguments: Vec<String>,
 }
 
 impl Runner {
@@ -36,6 +37,7 @@ impl Runner {
             command: vec![],
             should_exit: false,
             scope: ScopeValue::create(ScopeData::create_global()),
+            closure_arguments: vec![],
         }
     }
 }
@@ -68,8 +70,29 @@ macro_rules! with_scope {
     };
 }
 
+macro_rules! with_closure_arguments {
+    ( $this:expr => $visit_call:expr ) => {
+        with! { $this.closure_arguments => vec![] => $visit_call }
+    };
+}
+
 fn create_todo(location: &str) -> Box<dyn Value> {
     StringValue::create(&("[todo:".to_owned() + location + "]"))
+}
+
+macro_rules! extract_text {
+    ( $target:expr ) => {
+        {
+            let mut text: Option<String> = None;
+
+            let mut extractor = Extractor::new(|it: &mut Text| {
+                text = Some(it.value.clone());
+            });
+
+            $target.accept_simple_visitor(&mut extractor);
+            text
+        }
+    };
 }
 
 impl SimpleVisitor for Runner {
@@ -139,27 +162,31 @@ impl SimpleVisitor for Runner {
                 return;
             }
 
-            // if let Some(closure) = cast_mut!(&mut command[0] => ClosureValue) {
-            //     let mut data = closure.data.borrow_mut();
-
-            //     with_scope! { ScopeValue::create(data.scope.clone()), self =>
-            //         self.value = with_value! { self =>
-            //             data.body.accept_simple_visitor(self)
-            //         }
-            //     };
-            //     return;
-            // }
-
             if let None = cast!(&command[0] => StringValue) {
                 self.value = command.remove(0);
                 return;
             }
 
-            if let Some(mut value) = self.scope.get_value(&command[0].to_string()) {
+            if let Some(mut value) = self.scope.resolve(&command[0].to_string()) {
                 if let Some(closure) = cast_mut!(value => ClosureValue) {
                     let mut data = closure.data.borrow_mut();
+                    let mut scope = ScopeValue::create(data.scope.clone());
 
-                    with_scope! { ScopeValue::create(data.scope.clone()), self =>
+                    let arguments = with_closure_arguments! {
+                        self => data.arguments.accept_simple_visitor(self)
+                    };
+
+                    let minimum = std::cmp::min(arguments.len(), command.len() - 1);
+
+                    for index in 0..minimum {
+                        scope.set_value(&arguments[index], command.remove(1));
+                    }
+
+                    for index in minimum..arguments.len() {
+                        scope.set_value(&arguments[index], NoneValue::create());
+                    }
+
+                    with_scope! { scope, self =>
                         self.value = with_value! { self =>
                             data.body.accept_simple_visitor(self)
                         }
@@ -198,6 +225,23 @@ impl SimpleVisitor for Runner {
         self.value = NoneValue::create();
     }
 
+    // fn visit_accessor(&mut self, it: &mut Accessor) {
+    //     let inner = some_or! { extract_text!(it.inner) => {
+    //         println!("Warning > Accessor ignored > Inner accessor is not a valid name");
+    //         self.value = NoneValue::create();
+    //         return;
+    //     }};
+
+    //     let mut receiver = with_value! { self => it.target.accept_simple_visitor(self) };
+
+    //     if let Some(scope) = cast_mut!(receiver => ScopeValue) {
+    //         self.value = some_or! { scope.get_value(&inner) => NoneValue::create() };
+    //     } else {
+    //         println!("Warning > Accessor ignored > Receiver is not a scope > {:?} {:?}", receiver.get_type_name(), receiver.to_string());
+    //         self.value = receiver;
+    //     }
+    // }
+
     fn visit_unary(&mut self, it: &mut Unary) {
         let operator = with_value! { self => it.operator.accept_simple_visitor(self) };
         let target = with_value! { self => it.target.accept_simple_visitor(self) };
@@ -228,26 +272,52 @@ impl SimpleVisitor for Runner {
     }
 
     fn visit_assignment(&mut self, it: &mut Assignment) {
-        let mut receiver = String::new();
-
-        let mut extractor = Extractor::new(|it: &mut Text| {
-            receiver += &it.value;
-        });
-
-        it.receiver.accept_simple_visitor(&mut extractor);
-
-        if receiver.is_empty() {
+        let receiver = some_or! { extract_text!(it.receiver) => {
             println!("Warning > Assignment ignored > Receiver is not a valid name");
             self.value = NoneValue::create();
             return;
-        }
+        }};
+
+        let parts = receiver.split(".")
+            .map(|it| it.to_owned())
+            .collect::<Vec<String>>();
+
+        let mut prefix = parts.clone();
+        let name = prefix.remove(prefix.len() - 1);
+
+        let mut receiverScope = ScopeValue::create(self.scope.data.clone());
+
+        if !prefix.is_empty() {
+            if let Some(mut value) = self.scope.resolve_parts(&prefix) {
+                if let Some(scope) = cast_mut!(value => ScopeValue) {
+                    receiverScope = ScopeValue::create(scope.data.clone());
+                } else {
+                    println!("Warning > Assignment ignored > Receiver prefix is not a scope > {:?}", &receiver);
+                    self.value = NoneValue::create();
+                    return;
+                }
+            } else {
+                println!("Warning > Assignment ignored > Could't resolve the receiver > {:?}", &receiver);
+                self.value = NoneValue::create();
+                return;
+            }
+        };
 
         self.value = with_value! { self => it.value.accept_simple_visitor(self) };
-        self.scope.set_value(&receiver, self.value.duplicate_or_move());
+        receiverScope.set_value(&name, self.value.duplicate_or_move());
     }
 
-    fn visit_closure_arguments(&mut self, _it: &mut ClosureArguments) {
-        self.value = create_todo("closure_arguments")
+    fn visit_closure_arguments(&mut self, it: &mut ClosureArguments) {
+        for that in &mut it.values {
+            let value = with_value! { self => that.accept_simple_visitor(self) };
+
+            let receiver = some_or! { extract_text!(that) => {
+                println!("Warning > Assignment ignored > Receiver is not a valid name");
+                return;
+            }};
+
+            self.closure_arguments.push(receiver);
+        }
     }
 
     fn visit_expressions(&mut self, it: &mut Expressions) {
