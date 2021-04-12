@@ -332,7 +332,7 @@ fn handle_item_string_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
 
         if check_node!(maybe_parts2, TextParts) {
             let mut extractor2 = Extractor::new(move |that: &mut TextParts| {
-                that.parts.push(maybe_parts1);
+                that.parts.insert(0, maybe_parts1);
             });
 
             maybe_parts2.accept_simple_visitor(&mut extractor2);
