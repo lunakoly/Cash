@@ -91,6 +91,8 @@ fn main() {
             println!("::: {:?} :::", boolean);
         } else if let Some(closure) = cast!(runner.value => value::closure::ClosureValue) {
             println!("::: {:?} :::", closure);
+        } else if let Some(scope) = cast!(runner.value => value::scope::ScopeValue) {
+            println!("::: {:?} :::", scope);
         } else if let Some(none) = cast!(runner.value => value::none::NoneValue) {
             println!("::: {:?} :::", none);
         }

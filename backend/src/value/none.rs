@@ -32,6 +32,10 @@ impl Value for NoneValue {
         self
     }
 
+    fn duplicate_or_move(&mut self) -> Box<dyn Value> {
+        NoneValue::create()
+    }
+
     fn get_type_name(&self) -> &'static str {
         NONE_TYPE
     }

@@ -38,6 +38,10 @@ impl Value for BooleanValue {
         self
     }
 
+    fn duplicate_or_move(&mut self) -> Box<dyn Value> {
+        BooleanValue::create(self.value)
+    }
+
     fn get_type_name(&self) -> &'static str {
         BOOLEAN_TYPE
     }

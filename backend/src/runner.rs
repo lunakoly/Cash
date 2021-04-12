@@ -6,7 +6,8 @@ use crate::value::none::NoneValue;
 use crate::value::number::NumberValue;
 use crate::value::boolean::BooleanValue;
 use crate::value::string::StringValue;
-use crate::value::closure::ClosureValue;
+use crate::value::closure::{ClosureValue, ClosureData};
+use crate::value::scope::{ScopeValue, ScopeData};
 
 use processing::launch_pipeline;
 
@@ -18,10 +19,14 @@ use crate::{cast, cast_mut};
 
 use helpers::{elvis, result_or};
 
+use std::rc::Rc;
+use std::cell::RefCell;
+
 pub struct Runner {
     pub value: Box<dyn Value>,
     pub command: Vec<Box<dyn Value>>,
     pub should_exit: bool,
+    pub scope: Box<ScopeValue>,
 }
 
 impl Runner {
@@ -30,6 +35,7 @@ impl Runner {
             value: NoneValue::create(),
             command: vec![],
             should_exit: false,
+            scope: ScopeValue::create(ScopeData::create_global()),
         }
     }
 }
@@ -53,6 +59,12 @@ macro_rules! with_value {
 macro_rules! with_command {
     ( $this:expr => $visit_call:expr ) => {
         with! { $this.command => vec![] => $visit_call }
+    };
+}
+
+macro_rules! with_scope {
+    ( $scope:expr, $this:expr => $visit_call:expr ) => {
+        with! { $this.scope => $scope => $visit_call }
     };
 }
 
@@ -128,12 +140,23 @@ impl SimpleVisitor for Runner {
             }
 
             if let Some(closure) = cast_mut!(&mut command[0] => ClosureValue) {
-                self.value = with_value! { self => closure.body.accept_simple_visitor(self) };
+                let mut data = closure.data.borrow_mut();
+
+                with_scope! { ScopeValue::create(data.scope.clone()), self =>
+                    self.value = with_value! { self =>
+                        data.body.accept_simple_visitor(self)
+                    }
+                };
                 return;
             }
 
             if let None = cast!(&command[0] => StringValue) {
                 self.value = command.remove(0);
+                return;
+            }
+
+            if let Some(value) = self.scope.get_value(&command[0].to_string()) {
+                self.value = value;
                 return;
             }
 
@@ -233,6 +256,16 @@ impl SimpleVisitor for Runner {
             )
         );
 
-        self.value = ClosureValue::create(arguments, body);
+        self.value = ClosureValue::create(
+            Rc::new(
+                RefCell::new(
+                    ClosureData {
+                        arguments: arguments,
+                        body: body,
+                        scope: ScopeData::create(Some(self.scope.data.clone())),
+                    }
+                )
+            )
+        );
     }
 }

@@ -2,14 +2,23 @@ use crate::value::*;
 use crate::value::none::NoneValue;
 use crate::value::number::NumberValue;
 use crate::value::boolean::BooleanValue;
+use crate::value::scope::ScopeData;
 
 use frontend::ast::*;
+
+use std::rc::Rc;
+use std::cell::RefCell;
+
+pub struct ClosureData {
+    pub arguments: Box<dyn Node>,
+    pub body: Box<dyn Node>,
+    pub scope: Rc<RefCell<ScopeData>>,
+}
 
 pub const CLOSURE_TYPE: &'static str = "Closure";
 
 pub struct ClosureValue {
-    pub arguments: Box<dyn Node>,
-    pub body: Box<dyn Node>,
+    pub data: Rc<RefCell<ClosureData>>,
 }
 
 // impl Clone for ClosureValue {
@@ -40,20 +49,17 @@ impl Debug for ClosureValue {
 
 impl ClosureValue {
     pub fn new(
-        arguments: Box<dyn Node>,
-        body: Box<dyn Node>,
+        data: Rc<RefCell<ClosureData>>
     ) -> ClosureValue {
         ClosureValue {
-            arguments: arguments,
-            body: body,
+            data: data,
         }
     }
 
     pub fn create(
-        arguments: Box<dyn Node>,
-        body: Box<dyn Node>,
+        data: Rc<RefCell<ClosureData>>
     ) -> Box<ClosureValue> {
-        Box::new(ClosureValue::new(arguments, body))
+        Box::new(ClosureValue::new(data))
     }
 }
 
@@ -70,6 +76,10 @@ impl Value for ClosureValue {
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+
+    fn duplicate_or_move(&mut self) -> Box<dyn Value> {
+        ClosureValue::create(self.data.clone())
     }
 
     fn get_type_name(&self) -> &'static str {

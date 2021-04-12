@@ -3,6 +3,7 @@ pub mod boolean;
 pub mod number;
 pub mod string;
 pub mod closure;
+pub mod scope;
 
 use std::fmt::Debug;
 
@@ -20,6 +21,8 @@ pub trait Labeled {
 pub trait Value : Debug {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
+
+    fn duplicate_or_move(&mut self) -> Box<dyn Value>;
 
     fn get_type_name(&self) -> &'static str;
     fn to_string(&self) -> String;

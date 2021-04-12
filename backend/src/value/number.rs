@@ -38,6 +38,10 @@ impl Value for NumberValue {
         self
     }
 
+    fn duplicate_or_move(&mut self) -> Box<dyn Value> {
+        NumberValue::create(self.value)
+    }
+
     fn get_type_name(&self) -> &'static str {
         NUMBER_TYPE
     }

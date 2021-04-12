@@ -39,6 +39,10 @@ impl Value for StringValue {
         self
     }
 
+    fn duplicate_or_move(&mut self) -> Box<dyn Value> {
+        StringValue::create(&self.value)
+    }
+
     fn get_type_name(&self) -> &'static str {
         STRING_TYPE
     }
