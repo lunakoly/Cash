@@ -26,6 +26,7 @@ pub enum Token {
         value: String
     },
     Newline,
+    CommandEnd,
     End,
 }
 
@@ -39,6 +40,7 @@ impl RepresentableToken for Token {
             Token::Whitespace { .. } => "whitespace",
             Token::Newline { .. } => "newline",
             Token::End { .. } => "end",
+            Token::CommandEnd { .. } => "commandend",
             _ => "",
         }.to_owned()
     }
@@ -50,6 +52,7 @@ impl RepresentableToken for Token {
             Token::Number { value, .. } => Some(value),
             Token::Text { value } => Some(value),
             Token::Whitespace { value } => Some(value),
+            Token::Newline => Some("\n"),
             _ => None,
         }
     }
@@ -286,11 +289,9 @@ impl <'a> Lexer<'a> {
 
         if self.backend.accept('\n') {
             return if let None = self.nesting_stack.last() {
-                Token::Newline
+                Token::CommandEnd
             } else {
-                Token::Whitespace {
-                    value: self.backend.revise_all()
-                }
+                Token::Newline
             }
         }
 

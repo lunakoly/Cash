@@ -4,6 +4,7 @@ pub mod number;
 pub mod string;
 pub mod closure;
 pub mod scope;
+pub mod provider;
 
 use std::fmt::Debug;
 

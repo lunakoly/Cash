@@ -56,9 +56,10 @@ fn skip_whitespaces<T: RepresentableToken>(
 ) -> usize {
     let mut moved_token_index = token_index;
 
-    while tokens[moved_token_index].get_type_name() == "whitespace" {
+    while
+        tokens[moved_token_index].get_type_name() == "whitespace" ||
+        tokens[moved_token_index].get_type_name() == "newline" {
         moved_token_index += 1;
-
         if moved_token_index >= tokens.len() {
             break;
         }

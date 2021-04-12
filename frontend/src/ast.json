@@ -16,6 +16,9 @@
         "Pipeline": {
             "commands": "Vec<Box<dyn Node>>"
         },
+        "Provider": {
+            "target": "Box<dyn Node>"
+        },
         "Unary": {
             "operator": "Box<dyn Node>",
             "target": "Box<dyn Node>"

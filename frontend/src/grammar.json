@@ -3,11 +3,13 @@
     "rules": {
         "double_quoted_text": {
             "*#whitespace": "handle_text_create",
+            "*#newline": "handle_text_create",
             "#text": "handle_text_create",
             "#operator": "handle_text_create",
             "#delimiter!\"(": "handle_text_create",
             "#number": "handle_text_create",
             "@double_quoted_text *#whitespace": "handle_text_append",
+            "@double_quoted_text *#newline": "handle_text_append",
             "@double_quoted_text #text": "handle_text_append",
             "@double_quoted_text #operator": "handle_text_append",
             "@double_quoted_text #delimiter!\"(": "handle_text_append",
@@ -15,11 +17,13 @@
         },
         "single_quoted_text": {
             "*#whitespace": "handle_text_create",
+            "*#newline": "handle_text_create",
             "#text": "handle_text_create",
             "#operator": "handle_text_create",
             "#delimiter!'": "handle_text_create",
             "#number": "handle_text_create",
             "@single_quoted_text *#whitespace": "handle_text_append",
+            "@single_quoted_text *#newline": "handle_text_append",
             "@single_quoted_text #text": "handle_text_append",
             "@single_quoted_text #operator": "handle_text_append",
             "@single_quoted_text #delimiter!'": "handle_text_append",
@@ -52,9 +56,13 @@
             "@item *@string": "handle_item_string_append",
             "@item *( @expression )": "handle_item_substitution_append"
         },
+        "provider": {
+            "@item": "handle_pass",
+            "$ *@item": "handle_provider"
+        },
         "command": {
-            "@command @item": "handle_command_append",
-            "@item": "handle_command_create"
+            "@command *#whitespace @provider": "handle_command_append",
+            "@provider": "handle_command_create"
         },
         "pipeline": {
             "@pipeline | @command": "handle_pipeline_append",
@@ -64,7 +72,6 @@
             "+ @pipeline": "handle_unary",
             "- @pipeline": "handle_unary",
             "not @pipeline": "handle_unary",
-            "$ @pipeline": "handle_unary",
             "@ @pipeline": "handle_unary",
             "@pipeline": "handle_pass"
         },
@@ -115,7 +122,7 @@
             "@assignment": "handle_pass"
         },
         "expressions": {
-            "@expressions #newline @expression": "handle_expressions_append",
+            "@expressions *#newline @expression": "handle_expressions_append",
             "@expressions ; @expression": "handle_expressions_append",
             "@expression": "handle_expressions_create"
         }

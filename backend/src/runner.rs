@@ -7,6 +7,7 @@ use crate::value::number::NumberValue;
 use crate::value::string::StringValue;
 use crate::value::closure::{ClosureValue, ClosureData};
 use crate::value::scope::{ScopeValue, ScopeData};
+use crate::value::provider::ProviderValue;
 
 use processing::launch_pipeline;
 
@@ -169,7 +170,12 @@ impl SimpleVisitor for Runner {
             }
 
             if let None = cast!(&command[0] => StringValue) {
-                self.value = command.remove(0);
+                let mut value = command.remove(0);
+                if let Some(provider) = cast_mut!(value => ProviderValue) {
+                    self.value = std::mem::replace(&mut provider.delegate, NoneValue::create());
+                } else {
+                    self.value = value;
+                }
                 return;
             }
 
@@ -248,6 +254,27 @@ impl SimpleVisitor for Runner {
     //     }
     // }
 
+    fn visit_provider(&mut self, it: &mut Provider) {
+        let receiver_value = with_value! { self => it.target.accept_simple_visitor(self) };
+        let receiver = receiver_value.to_string();
+
+        if receiver.is_empty() {
+            println!("Warning > Accessing the provider > Receiver name is empty > {:?}", &receiver);
+            self.value = NoneValue::create();
+            return;
+        }
+
+        if let Some(value) = self.scope.resolve(&receiver) {
+            if let Some(..) = cast!(value => ClosureValue) {
+                self.value = value;
+            } else {
+                self.value = ProviderValue::create(value);
+            }
+        } else {
+            println!("Warning > Accessing the provider > Unresolved property name > {:?}", &receiver);
+        }
+    }
+
     fn visit_unary(&mut self, it: &mut Unary) {
         let operator = with_value! { self => it.operator.accept_simple_visitor(self) };
         let target = with_value! { self => it.target.accept_simple_visitor(self) };
@@ -290,6 +317,12 @@ impl SimpleVisitor for Runner {
 
         let mut prefix = parts.clone();
         let name = prefix.remove(prefix.len() - 1);
+
+        if name.is_empty() {
+            println!("Warning > Assignment ignored > Receiver name is empty > {:?}", &receiver);
+            self.value = NoneValue::create();
+            return;
+        }
 
         let mut receiver_scope = ScopeValue::create(self.scope.data.clone());
 

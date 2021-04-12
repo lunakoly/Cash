@@ -233,7 +233,7 @@ impl <'a> Liner<'a> {
             line.push(next.clone());
 
             match next {
-                Token::Newline => break,
+                Token::CommandEnd => break,
                 Token::End => {
                     self.end_token_met = true;
                     break;

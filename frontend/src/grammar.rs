@@ -386,10 +386,22 @@ fn handle_item_substitution_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn N
 //     }
 // }
 
-fn handle_command_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+fn handle_provider(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 2 {
+        Box::new(
+            Provider {
+                target: pattern.remove(1), // skipping the operator
+            }
+        )
+    } else {
+        create_todo("provider")
+    }
+}
+
+fn handle_command_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 3 {
         let mut command = pattern.remove(0);
-        let element = pattern.remove(0);
+        let element = pattern.remove(1); // skipping the whitespace
 
         let mut extractor = Extractor::new(move |it: &mut Command| {
             it.arguments.push(element);
