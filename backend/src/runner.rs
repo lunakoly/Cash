@@ -191,7 +191,13 @@ impl SimpleVisitor for Runner {
                     let minimum = std::cmp::min(arguments.len(), command.len() - 1);
 
                     for index in 0..minimum {
-                        scope.set_value(&arguments[index], command.remove(1));
+                        let mut value = command.remove(1);
+
+                        if let Some(provider) = cast_mut!(value => ProviderValue) {
+                            value = std::mem::replace(&mut provider.delegate, NoneValue::create());
+                        }
+
+                        scope.set_value(&arguments[index], value);
                     }
 
                     for index in minimum..arguments.len() {

@@ -18,3 +18,22 @@ changeName = {
 
 changeName
 greet
+
+greet = { person ->
+    echo.bat "Hello, (person)!"
+}
+
+greet Sam
+greet { pass John }
+
+getName = { pass Ivan }
+
+greet (getName)
+greet {getName}
+greet $getName
+
+getName = pass Alex
+
+greet (getName)
+greet {getName}
+greet $getName
