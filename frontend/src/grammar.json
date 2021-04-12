@@ -107,8 +107,12 @@
             "@low_logic xnor @high_logic": "handle_binary",
             "@high_logic": "handle_pass"
         },
-        "expression": {
+        "assignment": {
+            "@string = @assignment": "handle_assignment",
             "@low_logic": "handle_pass"
+        },
+        "expression": {
+            "@assignment": "handle_pass"
         },
         "expressions": {
             "@expressions #newline @expression": "handle_expressions_append",

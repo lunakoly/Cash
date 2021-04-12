@@ -25,6 +25,10 @@
             "operator": "Box<dyn Node>",
             "righter": "Box<dyn Node>"
         },
+        "Assignment": {
+            "receiver": "Box<dyn Node>",
+            "value": "Box<dyn Node>"
+        },
         "ClosureArguments": {
             "values": "Vec<Box<dyn Node>>"
         },

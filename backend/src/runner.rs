@@ -217,6 +217,25 @@ impl SimpleVisitor for Runner {
         }
     }
 
+    fn visit_assignment(&mut self, it: &mut Assignment) {
+        let mut receiver = String::new();
+
+        let mut extractor = Extractor::new(|it: &mut Text| {
+            receiver += &it.value;
+        });
+
+        it.receiver.accept_simple_visitor(&mut extractor);
+
+        if receiver.is_empty() {
+            println!("Warning > Assignment ignored > Receiver is not a valid name");
+            self.value = NoneValue::create();
+            return;
+        }
+
+        self.value = with_value! { self => it.value.accept_simple_visitor(self) };
+        self.scope.set_value(&receiver, self.value.duplicate_or_move());
+    }
+
     fn visit_closure_arguments(&mut self, _it: &mut ClosureArguments) {
         self.value = create_todo("closure_arguments")
     }

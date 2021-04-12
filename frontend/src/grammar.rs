@@ -429,6 +429,19 @@ fn handle_pipeline_create(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     }
 }
 
+fn handle_assignment(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
+    if pattern.len() == 3 {
+        Box::new(
+            Assignment {
+                receiver: pattern.remove(0),
+                value: pattern.remove(1), // skipping the operator
+            }
+        )
+    } else {
+        create_todo("handle_assignment")
+    }
+}
+
 fn handle_expressions_append(mut pattern: Vec<Box<dyn Node>>) -> Box<dyn Node> {
     if pattern.len() == 3 {
         let mut expressions = pattern.remove(0);
