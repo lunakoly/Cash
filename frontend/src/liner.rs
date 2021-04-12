@@ -52,7 +52,7 @@ fn transform_numbers(
     match (lefter, righter) {
         (
             Token::NumberSegment { value: lefter_value, base: lefter_base },
-            Token::NumberSegment { value: righter_value, base: righter_base }
+            Token::Number { value: righter_value, base: righter_base }
         ) => {
             // it's only possible that the 2 tokens
             // have different base
@@ -78,7 +78,7 @@ fn transform_numbers(
             }
 
             target.push(
-                Token::NumberSegment {
+                Token::Number {
                     value: lefter_value.clone() + &righter_value,
                     base: *righter_base
                 }

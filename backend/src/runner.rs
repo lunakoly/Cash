@@ -93,9 +93,22 @@ impl SimpleVisitor for Runner {
         let mut result = 0;
         let mut shift = 1;
 
-        for that in it.value.bytes().rev() {
-            result += ((that - '0' as u8) as i32) * shift;
-            shift *= it.base as i32;
+        if it.base <= 10 {
+            for that in it.value.bytes().rev() {
+                result += ((that - '0' as u8) as i32) * shift;
+                shift *= it.base as i32;
+            }
+        } else if it.base > 10 {
+            for that in it.value.bytes().rev() {
+                if ('0'..='9').contains(&(that as char)) {
+                    result += ((that - '0' as u8) as i32) * shift;
+                } else if ('a'..='z').contains(&(that as char)) {
+                    result += ((that - 'a' as u8) as i32 + 10) * shift;
+                } else {
+                    result += ((that - 'A' as u8) as i32 + 10) * shift;
+                }
+                shift *= it.base as i32;
+            }
         }
 
         self.value = NumberValue::create(result);
