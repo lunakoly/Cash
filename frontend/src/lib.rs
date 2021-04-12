@@ -323,4 +323,20 @@ mod tests {
             Token::End,
         ]);
     }
+
+    #[test]
+    fn test_lexer_tight() {
+        assert_tokens("echo test++++fest", &[
+            Token::Text {
+                value: "echo".to_owned()
+            },
+            Token::Whitespace {
+                value: " ".to_owned()
+            },
+            Token::Text {
+                value: "test++++fest".to_owned()
+            },
+            Token::End,
+        ]);
+    }
 }
