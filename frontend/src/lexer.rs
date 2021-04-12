@@ -114,6 +114,10 @@ pub struct Lexer<'a> {
     /// Number of the character
     /// the last token starts with.
     pub last_token_offset: usize,
+    /// Each value is the character
+    /// that represents the current
+    /// level of nesting.
+    pub nesting_stack: Vec<char>,
 }
 
 impl <'a> Lexer<'a> {
@@ -219,6 +223,56 @@ impl <'a> Lexer<'a> {
         };
     }
 
+    fn update_nesting_stack(&mut self, symbol: char) {
+        let context = self.nesting_stack.last();
+
+        if context == Some(&'"') {
+            if symbol == '"' {
+                self.nesting_stack.pop();
+            } else if symbol == '(' {
+                self.nesting_stack.push('(');
+            }
+        } else if context == Some(&'\'') {
+            if symbol == '\'' {
+                self.nesting_stack.pop();
+            }
+        } else if context == Some(&'(') {
+            if symbol == '"' {
+                self.nesting_stack.push('"');
+            } else if symbol == '\'' {
+                self.nesting_stack.push('\'');
+            } else if symbol == '(' {
+                self.nesting_stack.push('(');
+            } else if symbol == ')' {
+                self.nesting_stack.pop();
+            } else if symbol == '{' {
+                self.nesting_stack.push('{');
+            }
+        } else if context == Some(&'{') {
+            if symbol == '"' {
+                self.nesting_stack.push('"');
+            } else if symbol == '\'' {
+                self.nesting_stack.push('\'');
+            } else if symbol == '(' {
+                self.nesting_stack.push('(');
+            } else if symbol == '{' {
+                self.nesting_stack.push('{');
+            } else if symbol == '}' {
+                self.nesting_stack.pop();
+            }
+        } else {
+            if symbol == '"' {
+                self.nesting_stack.push('"');
+            } else if symbol == '\'' {
+                self.nesting_stack.push('\'');
+            } else if symbol == '(' {
+                self.nesting_stack.push('(');
+            } else if symbol == '{' {
+                self.nesting_stack.push('{');
+            }
+        }
+    }
+
     fn read_item(&mut self) -> Token {
         self.backend.clear();
 
@@ -231,7 +285,13 @@ impl <'a> Lexer<'a> {
         }
 
         if self.backend.accept('\n') {
-            return Token::Newline;
+            return if let None = self.nesting_stack.last() {
+                Token::Newline
+            } else {
+                Token::Whitespace {
+                    value: self.backend.revise_all()
+                }
+            }
         }
 
         if let Some(symbol) = self.backend.peek() {
@@ -241,6 +301,7 @@ impl <'a> Lexer<'a> {
             }
 
             if is_operator(symbol) {
+                self.update_nesting_stack(symbol);
                 self.backend.step();
                 return Token::Operator {
                     value: String::from(symbol)
@@ -248,6 +309,7 @@ impl <'a> Lexer<'a> {
             }
 
             if is_delimiter(symbol) {
+                self.update_nesting_stack(symbol);
                 self.backend.step();
                 return Token::Delimiter {
                     value: String::from(symbol)
@@ -288,6 +350,7 @@ impl <'a> Lexer<'a> {
             backend: backend,
             last_token: Token::Newline,
             last_token_offset: 0,
+            nesting_stack: vec![],
         };
     }
 }

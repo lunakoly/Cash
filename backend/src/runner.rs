@@ -4,7 +4,6 @@ use frontend::ast::nodes::*;
 use crate::value::Value;
 use crate::value::none::NoneValue;
 use crate::value::number::NumberValue;
-use crate::value::boolean::BooleanValue;
 use crate::value::string::StringValue;
 use crate::value::closure::{ClosureValue, ClosureData};
 use crate::value::scope::{ScopeValue, ScopeData};
@@ -12,8 +11,6 @@ use crate::value::scope::{ScopeValue, ScopeData};
 use processing::launch_pipeline;
 
 use std::fs;
-
-use frontend::lexer::Token;
 
 use crate::{cast, cast_mut};
 
@@ -74,10 +71,6 @@ macro_rules! with_closure_arguments {
     ( $this:expr => $visit_call:expr ) => {
         with! { $this.closure_arguments => vec![] => $visit_call }
     };
-}
-
-fn create_todo(location: &str) -> Box<dyn Value> {
-    StringValue::create(&("[todo:".to_owned() + location + "]"))
 }
 
 macro_rules! extract_text {
@@ -285,12 +278,12 @@ impl SimpleVisitor for Runner {
         let mut prefix = parts.clone();
         let name = prefix.remove(prefix.len() - 1);
 
-        let mut receiverScope = ScopeValue::create(self.scope.data.clone());
+        let mut receiver_scope = ScopeValue::create(self.scope.data.clone());
 
         if !prefix.is_empty() {
             if let Some(mut value) = self.scope.resolve_parts(&prefix) {
                 if let Some(scope) = cast_mut!(value => ScopeValue) {
-                    receiverScope = ScopeValue::create(scope.data.clone());
+                    receiver_scope = ScopeValue::create(scope.data.clone());
                 } else {
                     println!("Warning > Assignment ignored > Receiver prefix is not a scope > {:?}", &receiver);
                     self.value = NoneValue::create();
@@ -304,12 +297,12 @@ impl SimpleVisitor for Runner {
         };
 
         self.value = with_value! { self => it.value.accept_simple_visitor(self) };
-        receiverScope.set_value(&name, self.value.duplicate_or_move());
+        receiver_scope.set_value(&name, self.value.duplicate_or_move());
     }
 
     fn visit_closure_arguments(&mut self, it: &mut ClosureArguments) {
         for that in &mut it.values {
-            let value = with_value! { self => that.accept_simple_visitor(self) };
+            // let value = with_value! { self => that.accept_simple_visitor(self) };
 
             let receiver = some_or! { extract_text!(that) => {
                 println!("Warning > Assignment ignored > Receiver is not a valid name");

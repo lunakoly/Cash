@@ -135,7 +135,7 @@ impl ScopeValue {
 
 impl Debug for ScopeValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut data = self.data.borrow_mut();
+        let data = self.data.borrow_mut();
         let properties = format!("{:?}", data.properties);
 
         f.debug_struct("ScopeValue")

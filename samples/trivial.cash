@@ -1,0 +1,20 @@
+name = pass Nick
+
+greet = {
+    echo.bat "Hello, (name)!"
+}
+
+greet
+
+makeAnOffer = { price ->
+    echo.bat "Look, (name), I've got $(price) for u, if u just..."
+}
+
+makeAnOffer 123
+
+changeName = {
+    outerScope.name = pass AAA
+}
+
+changeName
+greet

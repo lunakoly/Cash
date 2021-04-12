@@ -7,6 +7,7 @@ extern "C" {
     fn terminal_read_line() -> *const c_char;
     fn deallocate_string(pointer: *const c_char);
     fn terminal_has_next() -> bool;
+    fn terminal_is_interactive() -> bool;
 }
 
 fn replace_and_deallocate(pointer: *const c_char) -> String {
@@ -26,5 +27,11 @@ fn read_line() -> String {
 fn has_next() -> bool {
     unsafe {
         terminal_has_next()
+    }
+}
+
+pub fn is_interactive() -> bool {
+    unsafe {
+        terminal_is_interactive()
     }
 }

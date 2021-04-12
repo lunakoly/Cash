@@ -33,3 +33,10 @@ char * terminal_read_line();
  * needed any more.
  */
 void deallocate_string(char * pointer);
+
+/**
+ * Used to determine if the current
+ * stdin is provided as an interactive
+ * user session or a simple file redirect.
+ */
+bool terminal_is_interactive();

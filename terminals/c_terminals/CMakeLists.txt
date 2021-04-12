@@ -38,6 +38,7 @@ add_library(
             "src/${PLATFORM_SPECIFIC_FILES}/helpers.h"
             "src/${PLATFORM_SPECIFIC_FILES}/terminal.c"
             "src/${PLATFORM_SPECIFIC_FILES}/vt100.c"
+            "src/${PLATFORM_SPECIFIC_FILES}/provider.c"
 )
 
 install(TARGETS c_terminals DESTINATION .)
