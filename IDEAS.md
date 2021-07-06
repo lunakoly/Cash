@@ -7,12 +7,11 @@ So, here're various approaches for the grammar of an abstract shell language.
 Emojis are used to highlight the good and bad sides of a decision.
 
 * ⚡ Simplicity/Conceptuality
-
 * 📃 Code Conventions
 * ⛔️ Limitations
 * ⚠️ Possible Problem
 * 🔱 Unclear
-* 🔰 // saving for later
+* 🔰 Performance
 
 ## _Just a Command_ Syntax
 
@@ -324,3 +323,166 @@ if (getAgeOf Nick > 20) {
 ```
 
 Should `> 20` mean a redirection to the 20th descriptor or we should wait until the left command returns it's value, and analyze it then? Or maybe something else?
+
+### Requiring descriptors to have the `#`prefix
+
+* ⚡ Checking if a property exists is done via `$`.
+
+```
+if ($name) {
+	echo Hello, (name)!
+} else {
+	echo Hi!
+}
+```
+
+```
+apply = { name, act ->
+	act $name
+}
+greet = { name ->
+	echo Hello, (name)!
+}
+apply Nick $greet
+```
+
+Attempt to do:
+
+`````
+echo My name is $name
+`````
+
+ Should result in something like:
+
+```
+My name is Getter{name}
+```
+
+This would ensure everyone uses the same notation and every piece of code supports 'getter substitution'.
+
+- ⚡ Letting operators rely on value types
+
+Let operators `<`/`>`/... rely on the types of the values. If there is a `#N` involved, it's a rederict to the `n`-th descriptor, if there is a `#fileName` to the right - it's a redirect to a file, otherwise we should execute the expressions and perform the appropriate action based on their types.
+
+```
+if (getAgeOf Nick > 20) {
+	echo Oh...
+}
+
+echo Good > #log.txt
+
+echo Error > #2
+```
+
+### Results in
+
+* 📃 Using getters is the default code convention
+* 📃 Most of the times we'll see either `myFun $param1 $param2` or `echo Path is /my/(result)/path`
+* 📃 All redirects are denoted by the `#` prefix
+* ⛔️ Hard to assign strings to variables
+
+```
+name = text Nick
+
+# name = Nick
+# => Command `Nick` not found
+```
+
+- ⚠️ Lifetime of a variable captured by a closure
+
+```
+doSomething = {
+	a = 10
+	getA = { b -> add a b }
+	$getA
+}
+
+(doSomething) 20
+```
+
+Should `a` be deleted as soon as the `doSomething`'s scope was left? Should it now contain some `None` value or this should be handled by a garbage collector (which may be unaffordable for a shell).
+
+### Making single quotes `'` mean a string value
+
+* ⚡ Checking if a property exists is done via `$`.
+
+```
+if ($name) {
+	echo Hello, (name)!
+} else {
+	echo Hi!
+}
+```
+
+```
+apply = { name, act ->
+	act $name
+}
+greet = { name ->
+	echo Hello, (name)!
+}
+apply Nick $greet
+```
+
+Attempt to do:
+
+`````
+echo My name is $name
+`````
+
+ Should result in something like:
+
+```
+My name is Getter{name}
+```
+
+This would ensure everyone uses the same notation and every piece of code supports 'getter substitution'.
+
+- ⚡ Letting operators rely on value types
+
+Let operators `<`/`>`/... rely on the types of the values. If there is a `#N` involved, it's a rederict to the `n`-th descriptor, if there is a `#fileName` to the right - it's a redirect to a file, otherwise we should execute the expressions and perform the appropriate action based on their types.
+
+```
+if (getAgeOf Nick > 20) {
+	echo Oh...
+}
+
+echo Good > #log.txt
+
+echo Error > #2
+```
+
+* ~~⛔️ Hard to assign strings to variables~~
+* 📃 Most of the string values are denoted by the `'` quotes, and `"` are only used to join parts of a single file path together.
+* 🔰 Parsing special syntax for "just strings" should improve the performance as now we don't need to do complex string interpolation.
+
+```
+name = 'Nick'
+echo Hello, (name)!
+```
+
+But the `pass` command will still be there:
+
+```
+name = pass Nick
+echo Hello, (name)!
+```
+
+### Results in
+
+* 📃 Using getters is the default code convention
+* 📃 Most of the times we'll see either `myFun $param1 $param2` or `echo Path is /my/(result)/path`
+* 📃 All redirects are denoted by the `#` prefix
+- ⚠️ Lifetime of a variable captured by a closure
+
+```
+doSomething = {
+	a = 10
+	getA = { b -> add a b }
+	$getA
+}
+
+(doSomething) 20
+```
+
+Should `a` be deleted as soon as the `doSomething`'s scope was left? Should it now contain some `None` value or this should be handled by a garbage collector (which may be unaffordable for a shell).
