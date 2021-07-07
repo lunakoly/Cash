@@ -486,3 +486,55 @@ doSomething = {
 ```
 
 Should `a` be deleted as soon as the `doSomething`'s scope was left? Should it now contain some `None` value or this should be handled by a garbage collector (which may be unaffordable for a shell).
+
+### More Questions
+
+- ⚠️ Closure: function vs object
+
+When a closure should mean a function, whose variables must be deleted from the memory, and when - an object, that should be preserved until the used deletes it? One possible solution - to introduce a keyword/command for one of the cases:
+
+```
+person = object {
+	name = pass Nick
+	age = 21
+}
+
+greet = {
+	echo Hello!
+}
+
+greet
+```
+
+Or we could manually check if the first command word resolved into a closure (and this way we should treat is as a function call), or if curly braces `{}` were literaly present in the user's input, and therefore it's an object initialization.
+
+- ⚠️ Argument modifier or a separate argument
+
+
+We can't have argument modifiers, because the only thing that separates one argument from another is the space. Well, we _do_ can parse the following thing, but it looks weird.
+
+```
+doSomethingTo $someTarget "some title" object {
+	param1 = 1
+	param2 = 2
+}
+```
+
+### Random Idea
+
+- ⚡ We could force closure-parameter mean the end of the parameters list and the nextword after it would mean a function being called on the result of the previous command as the receiver. This would make chain calls look like:
+
+```
+result = requestApi $context {
+	doFirst
+	doSecond
+	callApi $url
+} then { response ->
+	echo Got a $response
+	$response
+} catch { error ->
+	echo An error occurred: $error
+}
+```
+
+Otherwise an operator is to be introduces, and it's unclear which exactly: a pipe `|` or a dot `.` or whatever...
